@@ -13,7 +13,7 @@ categories that miught be of interest for a future study (e.g. to make sure that
 
 ```
 git clone https://github.com/FranckLejzerowicz/Xclusion_criteria.git
-cd Xpbs
+cd Xclusion_criteria
 pip install -e .
 ```
 
