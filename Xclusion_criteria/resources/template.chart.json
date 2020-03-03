@@ -1,0 +1,348 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
+  "autosize": "pad",
+  "padding": 5,
+  "height": 300,
+  "data": [
+    {
+      "name": "data-9516fa2a2311e3157de3523eee787544",
+      "format": {},
+      "values": [
+        {
+          "#SampleID": "10317.000023780",
+          "ACID_REFLUX": "nan",
+          "ACNE_MEDICATION": "false",
+          "ACNE_MEDICATION_OTC": "false",
+          "ADD_ADHD": "I do not have this condition",
+          "AGE_CAT": "60s",
+          "AGE_CORRECTED": 64,
+          "AGE_YEARS": 64,
+          "ALCOHOL_CONSUMPTION": "true",
+          "ALCOHOL_FREQUENCY": "Daily"
+        },
+        {
+          "#SampleID": "10317.000020475",
+          "ACID_REFLUX": "nan",
+          "ACNE_MEDICATION": "false",
+          "ACNE_MEDICATION_OTC": "false",
+          "ADD_ADHD": "I do not have this condition",
+          "AGE_CAT": "30s",
+          "AGE_CORRECTED": 34,
+          "AGE_YEARS": 34,
+          "ALCOHOL_CONSUMPTION": "true",
+          "ALCOHOL_FREQUENCY": "Rarely (a few times/month)"
+        },
+        {
+          "#SampleID": "10317.000022020",
+          "ACID_REFLUX": "nan",
+          "ACNE_MEDICATION": "false",
+          "ACNE_MEDICATION_OTC": "false",
+          "ADD_ADHD": "I do not have this condition",
+          "AGE_CAT": "30s",
+          "AGE_CORRECTED": 33,
+          "AGE_YEARS": 33,
+          "ALCOHOL_CONSUMPTION": "true",
+          "ALCOHOL_FREQUENCY": "Rarely (a few times/month)"
+        },
+        {
+          "#SampleID": "10317.000023121",
+          "ACID_REFLUX": "nan",
+          "ACNE_MEDICATION": "false",
+          "ACNE_MEDICATION_OTC": "false",
+          "ADD_ADHD": "I do not have this condition",
+          "AGE_CAT": "30s",
+          "AGE_CORRECTED": 39,
+          "AGE_YEARS": 39,
+          "ALCOHOL_CONSUMPTION": "false",
+          "ALCOHOL_FREQUENCY": "Never"
+        }
+      ]
+    },
+    {
+      "name": "data_1",
+      "source": "data-9516fa2a2311e3157de3523eee787544"
+    },
+    {
+      "name": "data_2",
+      "source": "data-9516fa2a2311e3157de3523eee787544"
+    }
+  ],
+  "signals": [
+      {
+          "name": "concat_0_width",
+          "value": 400
+      },
+      {
+          "name": "concat_1_x_step",
+          "value": 20
+      },
+      {
+          "name": "concat_1_width",
+          "update": "bandspace(domain('concat_1_x').length, 1, 0.5) * concat_1_x_step"
+      },
+      {
+          "name": "Continuous_y",
+          "value": "AGE_CORRECTED",
+          "bind": {
+              "input": "select",
+              "options": [
+                  "AGE_CORRECTED",
+                  "AGE_YEARS"
+              ]
+          }
+      },
+      {
+          "name": "Continuous_x",
+          "value": "AGE_CORRECTED",
+          "bind": {
+              "input": "select",
+              "options": [
+                  "AGE_CORRECTED",
+                  "AGE_YEARS"
+              ]
+          }
+      },
+      {
+          "name": "Categorical_x",
+          "value": "ACID_REFLUX",
+          "bind": {
+              "input": "select",
+              "options": [
+                  "ACID_REFLUX",
+                  "ACNE_MEDICATION",
+                  "ACNE_MEDICATION_OTC",
+                  "ADD_ADHD",
+                  "AGE_CAT"
+              ]
+          }
+      },
+      {
+          "name": "Legend",
+          "value": "ACID_REFLUX",
+          "bind": {
+              "input": "select",
+              "options": [
+                  "ACID_REFLUX",
+                  "ACNE_MEDICATION",
+                  "ACNE_MEDICATION_OTC",
+                  "ADD_ADHD",
+                  "AGE_CAT",
+                  "AGE_CORRECTED",
+                  "AGE_YEARS"
+              ]
+          }
+      },
+      {
+          "name": "nullSize",
+          "value": 8
+      },
+      {
+          "name": "nullGap",
+          "update": "nullSize + 10"
+      }
+  ],
+  "layout": {"padding": 20, "bounds": "full", "align": "each"},
+  "marks": [
+    {
+      "type": "group",
+      "name": "concat_0_group",
+      "style": "cell",
+      "encode": {
+        "update": {
+          "width": {"signal": "concat_0_width"},
+          "height": {"signal": "height"}
+        }
+      },
+      "marks": [
+        {
+          "name": "concat_0_marks",
+          "type": "symbol",
+          "style": ["circle"],
+          "from": {"data": "data_1"},
+          "encode": {
+            "update": {
+              "opacity": {"value": 0.7},
+              "size": {"value": 60},
+              "fill": {"scale": "color", "field": {"signal": "Legend"}},
+              "tooltip": {"signal": "''+datum[\"#SampleID\"]"},
+              "x": {"scale": "concat_0_x", "field": {"signal": "Continuous_x"}},
+              "y": {"scale": "concat_0_y", "field": {"signal": "Continuous_y"}},
+              "shape": {"value": "circle"}
+            }
+          }
+        }
+      ],
+      "axes": [
+        {
+          "scale": "concat_0_x",
+          "orient": "bottom",
+          "grid": false,
+          "title": {"signal": "Continuous_x"},
+          "labelFlush": true,
+          "labelOverlap": true,
+          "tickCount": {"signal": "ceil(concat_0_width/40)"},
+          "zindex": 1
+        },
+        {
+          "scale": "concat_0_x",
+          "orient": "bottom",
+          "gridScale": "concat_0_y",
+          "grid": true,
+          "tickCount": {"signal": "ceil(concat_0_width/40)"},
+          "domain": false,
+          "labels": false,
+          "maxExtent": 0,
+          "minExtent": 0,
+          "ticks": false,
+          "zindex": 0
+        },
+        {
+          "scale": "concat_0_y",
+          "orient": "left",
+          "grid": false,
+          "title": {"signal": "Continuous_y"},
+          "labelOverlap": true,
+          "tickCount": {"signal": "ceil(height/40)"},
+          "zindex": 1
+        },
+        {
+          "scale": "concat_0_y",
+          "orient": "left",
+          "gridScale": "concat_0_x",
+          "grid": true,
+          "tickCount": {"signal": "ceil(height/40)"},
+          "domain": false,
+          "labels": false,
+          "maxExtent": 0,
+          "minExtent": 0,
+          "ticks": false,
+          "zindex": 0
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "name": "concat_1_group",
+      "style": "cell",
+      "encode": {
+        "update": {
+          "width": {"signal": "concat_1_width"},
+          "height": {"signal": "height"}
+        }
+      },
+      "marks": [
+        {
+          "name": "concat_1_marks",
+          "type": "symbol",
+          "style": ["circle"],
+          "from": {"data": "data_2"},
+          "encode": {
+            "update": {
+              "opacity": {"value": 0.7},
+              "size": {"value": 60},
+              "fill": {"scale": "color", "field": {"signal": "Legend"}},
+              "tooltip": {"signal": "''+datum[\"#SampleID\"]"},
+              "x": {"scale": "concat_1_x", "field": {"signal": "Categorical_x"}},
+              "y": {"scale": "concat_1_y", "field": {"signal": "Continuous_y"}},
+              "shape": {"value": "circle"}
+            }
+          }
+        }
+      ],
+      "axes": [
+        {
+          "scale": "concat_1_x",
+          "orient": "bottom",
+          "grid": false,
+          "title": {"signal": "Categorical_x"},
+          "labelAlign": "right",
+          "labelAngle": 270,
+          "labelBaseline": "middle",
+          "labelOverlap": true,
+          "zindex": 1
+        },
+        {
+          "scale": "concat_1_y",
+          "orient": "left",
+          "grid": false,
+          "title": {"signal": "Continuous_y"},
+          "labelOverlap": true,
+          "tickCount": {"signal": "ceil(height/40)"},
+          "zindex": 1
+        },
+        {
+          "scale": "concat_1_y",
+          "orient": "left",
+          "gridScale": "concat_1_x",
+          "grid": true,
+          "tickCount": {"signal": "ceil(height/40)"},
+          "domain": false,
+          "labels": false,
+          "maxExtent": 0,
+          "minExtent": 0,
+          "ticks": false,
+          "zindex": 0
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "color",
+      "type": "ordinal",
+      "domain": {
+        "fields": [
+          {"data": "data_1", "field": {"signal": "Legend"}},
+          {"data": "data_2", "field": {"signal": "Legend"}}
+        ],
+        "sort": true
+      },
+      "range": "category",
+      "interpolate": "hcl"
+    },
+    {
+      "name": "concat_0_x",
+      "type": "linear",
+      "domain": {"data": "data_1", "field": {"signal": "Continuous_x"}},
+      "range": [0, {"signal": "concat_0_width"}],
+      "nice": true,
+      "zero": true
+    },
+    {
+      "name": "concat_0_y",
+      "type": "linear",
+      "domain": {"data": "data_1", "field": {"signal": "Continuous_y"}},
+      "range": [{"signal": "height"}, 0],
+      "nice": true,
+      "zero": true
+    },
+    {
+      "name": "concat_1_x",
+      "type": "point",
+      "domain": {"data": "data_2", "field": {"signal": "Categorical_x"}, "sort": true},
+      "range": {"step": {"signal": "concat_1_x_step"}},
+      "padding": 0.5
+    },
+    {
+      "name": "concat_1_y",
+      "type": "linear",
+      "domain": {"data": "data_2", "field": {"signal": "Continuous_y"}},
+      "range": [{"signal": "height"}, 0],
+      "nice": true,
+      "zero": true
+    }
+  ],
+  "legends": [
+    {
+      "fill": "color",
+      "gradientLength": {"signal": "clamp(height, 64, 200)"},
+      "symbolType": "circle",
+      "title": {"signal": "Legend"},
+      "encode": {
+        "symbols": {
+          "update": {"shape": {"value": "circle"}, "opacity": {"value": 0.7}}
+        }
+      }
+    }
+  ]
+}

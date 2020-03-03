@@ -59,25 +59,45 @@ Inclusion/Exclusion criteria can be passed either through a simple yaml file (`-
         - "I have not taken antibiotics in the past year."
         - "Year"
         ```
+    For the  numeric indicator `2`, the range **must** be composed of two values:
+    a minimum and a maximum (in this order), e.g.
+    ```
+    age,2:
+      - 10
+      - 70
+    ```
+    It is possible to not set a minimum or a maximum bound, by writing "None" instead, e.g.   
+    ```
+    age,2:
+      - 10
+      - None
+    ```
+    (but there must be 2 items...)
+    
+    The key `no_nan` is special: if present, it lists the variables will be filtered so that no sample will be left
+    that has a _missing value_ for these variables. These _missing values_ are formal NumPy's "nan" (`np.nan`), as
+    well as any of these terms:
+    - unknown
+    - unspecified
+    - not provided
+    - not applicable
+    - missing
+    - nan
+    
+    (this default _missing values_ vocabulary can be edited, in file `./Xclusion_criteria/resources/nulls.txt`)
 
 - _option_ `-c`: One criteria, composed of three space-separated elements (overrides the criteria if exists in the yaml 
 file for the same `(variable + selection indicator)`. Can be used multiple times, e.g.
     - `-c sex 1 Male -c age_cat 0 baby/teen`. This commands will (i) keep males **and** (ii) remove babies and teens, 
     respectively.
 - _option_ `-z`: Path to a yaml file containing the plotting's categorical variables, e.g.:
- 
-
-The variables listed under `no_nan` are those which will be filtered so that no sample have a _missing value_
-for these variables. The _missing values_ are formal NumPy's "nan" (`np.nan`), as well as any of these terms:
-- unknown
-- unspecified
-- not provided
-- not applicable
-- missing
-- nan
-
-(this default _missing values_ vocabulary can be edited, in file `./Xclusion_criteria/resources/nulls.txt`)
-
+    ```
+    categories:
+      - bmi_cat
+      - age_years
+      - types_of_plants
+    ```
+    There will be barplot bars for each factor of each of these categorical variables (see image below).
 ## Outputs
 
 - _option_ `-in`: Metadata table reduced to the samples satisfying all the inclusion criteria (the **selecion**).

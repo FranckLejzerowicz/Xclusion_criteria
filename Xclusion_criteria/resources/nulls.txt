@@ -1,0 +1,6 @@
+unknown
+unspecified
+not provided
+not applicable
+missing
+nan

@@ -1,0 +1,12 @@
+include Xclusion_criteria/examples/criteria.yml
+include Xclusion_criteria/resources/nulls.txt
+include Xclusion_criteria/resources/template.chart.json
+include Xclusion_criteria/resources/template.text.html
+include Xclusion_criteria/resources/images/brush_samples.png
+include Xclusion_criteria/resources/images/dropdown_numeric.png
+include Xclusion_criteria/resources/images/selection_popup.png
+include Xclusion_criteria/tests/metadata/test_md/md_colons.tsv
+include Xclusion_criteria/tests/metadata/test_md/md_commas.tsv
+include Xclusion_criteria/tests/metadata/test_md/md_tabs.tsv
+include Xclusion_criteria/tests/metadata/test_md/md_missing.tsv
+include Xclusion_criteria/tests/metadata/test_md/md_upper.tsv
