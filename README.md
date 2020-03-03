@@ -12,11 +12,9 @@ categories that miught be of interest for a future study (e.g. to make sure that
 ## Installation
 
 ```
-pip install git+https://github.com/FranckLejzerowicz/Xclusion_criteria.git
-```
-or 
-```
-pip install --upgrade git+https://github.com/FranckLejzerowicz/Xclusion_criteria.git
+git clone https://github.com/FranckLejzerowicz/Xclusion_criteria.git
+cd Xpbs
+pip install -e .
 ```
 
 *_Note that python and pip should be python3_
