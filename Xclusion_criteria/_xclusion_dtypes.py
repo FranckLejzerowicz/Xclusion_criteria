@@ -195,4 +195,32 @@ def split_variables_types(dtypes: dict, criteria: dict) -> tuple:
             categorical.append(var)
         elif dtype in ['int', 'float']:
             numerical.append(var)
+
     return numerical, categorical
+
+
+def check_num_cat_lists(numerical: list, categorical: list, messages: list) -> bool:
+    """
+    Parameters
+    ----------
+    numerical : list
+        Metadata variables that are numeric.
+    categorical : list
+        Metadata variables that are categorical.
+    messages : list
+        Message to print in case of error.
+
+    Returns
+    -------
+    boolean : bool
+        Whether to stop processing or not.
+    """
+    boolean = False
+    if len(numerical) < 2:
+        messages.append('Not enough numerical variables in the metadata (%s)' % len(numerical))
+        boolean = True
+    if len(categorical) < 1:
+        messages.append('Not enough categorical variables in the metadata (%s)' % len(categorical))
+        boolean = True
+
+    return boolean

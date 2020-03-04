@@ -15,7 +15,8 @@ from Xclusion_criteria._xclusion_dtypes import (
     get_dtypes_init,
     get_dtypes_final,
     check_dtype_object,
-    split_variables_types
+    split_variables_types,
+    check_num_cat_lists
 )
 
 
@@ -129,6 +130,28 @@ class TestDtypes(unittest.TestCase):
         self.assertEqual(self.test_dtype_pd1, test_dtypes1)
         test_dtypes2 = get_dtypes(self.dtype_pd2, self.nulls)
         self.assertEqual(self.test_dtype_pd2, test_dtypes2)
+
+    def test_check_num_cat_lists(self):
+
+        test_message = []
+        boolean = check_num_cat_lists([], ['1'], test_message)
+        self.assertEqual(boolean, True)
+        self.assertEqual(test_message, ['Not enough numerical variables in the metadata (0)'])
+
+        test_message = []
+        boolean = check_num_cat_lists(['1'], ['1'], test_message)
+        self.assertEqual(boolean, True)
+        self.assertEqual(test_message, ['Not enough numerical variables in the metadata (1)'])
+
+        test_message = []
+        boolean = check_num_cat_lists(['1', '2'], [], test_message)
+        self.assertEqual(boolean, True)
+        self.assertEqual(test_message, ['Not enough categorical variables in the metadata (0)'])
+
+        test_message = []
+        boolean = check_num_cat_lists(['1', '2'], ['1'], test_message)
+        self.assertEqual(boolean, False)
+        self.assertEqual(test_message, [])
 
 
 if __name__ == '__main__':

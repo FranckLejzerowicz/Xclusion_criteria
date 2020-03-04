@@ -22,7 +22,6 @@ from Xclusion_criteria._xclusion_crits import (
     check_numeric_indicator,
     check_var_in_md,
     get_criteria,
-    apply_criteria,
     do_filtering
 )
 
@@ -271,8 +270,6 @@ class TestCrits(unittest.TestCase):
         self.assertEqual(test_boolean, True)
         self.assertEqual(test_messages, ['[Warning] Both numerical bounds for col2 are "None" (skipping)'])
 
-    # def test_apply_criteria(self):
-    #     apply_criteria()
 
 if __name__ == '__main__':
     unittest.main()

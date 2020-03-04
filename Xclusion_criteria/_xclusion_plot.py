@@ -38,12 +38,6 @@ def make_visualizations(included: pd.DataFrame, i_plot_groups: str,
     flowchart : list
         Steps of the workflow with samples counts (simple representation).
     """
-    if len(numerical) < 2:
-        print('Not enough numerical variables in the metadata (%s)\nExiting' % len(numerical))
-        sys.exit(1)
-    if len(categorical) < 1:
-        print('Not enough categorical variables in the metadata (%s)\nExiting' % len(categorical))
-        sys.exit(1)
     included_num = included[numerical].copy()
     included_cat = included[categorical].copy()
 
@@ -386,16 +380,3 @@ def get_parsed_plot_groups(i_plot_groups: str) -> dict:
         with open(i_plot_groups) as handle:
             plot_groups.update(yaml.load(handle, Loader=yaml.FullLoader))
     return plot_groups
-
-
-def show_flowchart(flowchart: list) -> None:
-    """
-    Parameters
-    ----------
-    flowchart : list
-        Steps of the workflow with samples counts.
-    """
-    print('Samples selection:')
-    for flow in flowchart:
-        print('\t%s' % flow)
-

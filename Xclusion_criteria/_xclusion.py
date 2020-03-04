@@ -6,12 +6,13 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import sys
 import pkg_resources
 
 from Xclusion_criteria._xclusion_io import read_meta_pd
-from Xclusion_criteria._xclusion_dtypes import get_dtypes, split_variables_types
+from Xclusion_criteria._xclusion_dtypes import get_dtypes, split_variables_types, check_num_cat_lists
 from Xclusion_criteria._xclusion_crits import get_criteria, apply_criteria
-from Xclusion_criteria._xclusion_plot import make_visualizations, show_flowchart
+from Xclusion_criteria._xclusion_plot import make_visualizations
 
 RESOURCES = pkg_resources.resource_filename('Xclusion_criteria', 'resources')
 
@@ -51,6 +52,10 @@ def xclusion_criteria(
 
     dtypes = get_dtypes(metadata, nulls)
     numerical, categorical = split_variables_types(dtypes, criteria)
+
+    if check_num_cat_lists(list(numerical), list(categorical), list(messages)):
+        print('Exiting')
+        sys.exit(1)
 
     flowchart, included = apply_criteria(metadata, criteria, list(categorical), list(messages))
     included.reset_index().to_csv(o_included, index=False, sep='\t')
