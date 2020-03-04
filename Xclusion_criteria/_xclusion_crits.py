@@ -205,7 +205,7 @@ def get_criteria(p_criterion: tuple, i_criteria: str,
     -------
     criteria : dict
         Inclusion/exclusion criteria to apply.
-    message : str
+    messages : list
         Message to print in case of error.
     """
     messages, criteria = [], {}
@@ -249,8 +249,62 @@ def get_criteria(p_criterion: tuple, i_criteria: str,
     return criteria, messages
 
 
+def do_filtering(input_pd: pd.DataFrame, var: str, index: str,
+                 values: list, numerical: list, messages: list) -> tuple:
+    """
+    Parameters
+    ----------
+    input_pd : pd.DataFrame
+        Metadata with all current to filter.
+    var : str
+        Metadata variable in criteria.
+    index : str
+        Numeric indicator.
+    values : list
+        Metadata variables in criteria.
+    numerical : list
+        Metadata variables that are numeric.
+    messages : list
+        Message to print in case of error.
+
+    Returns
+    -------
+    cur_name : str
+        Name of the current selection step.
+    boolean : bool
+        Whether to keep the key/value or not.
+    included : pd.DataFrame
+        Metadata for the included samples only.
+    """
+    cur_name = ''
+    boolean = False
+    included = input_pd.copy()
+    # filter based on the criteria, and report the delta and the number of samples left
+    if index == '0':
+        cur_name = 'No_%s' % var
+        included = included.loc[~included[var].fillna('nan').str.lower().isin([x.lower() for x in values])]
+    elif index == '1':
+        cur_name = var
+        included = included.loc[included[var].isin(values)]
+    elif index == '2':
+        if var not in numerical:
+            messages.append('Metadata variable %s is not numerical (skipping)' % var)
+            return cur_name, True, included
+        crit_min = values[0]
+        crit_max = values[1]
+        if str(crit_min) == 'None' and str(crit_max) == 'None':
+            messages.append('[Warning] Both numerical bounds for %s are "None" (skipping)' % var)
+            return cur_name, True, included
+        cur_name = 'Range_%s' % var
+        if str(crit_min) != 'None':
+            included = included.loc[(included[var].fillna((float(crit_min) - 0.0001)) > float(crit_min))]
+        if str(crit_max) != 'None':
+            included = included.loc[(included[var].fillna((float(crit_max) + 0.0001)) < float(crit_max))]
+    return cur_name, boolean, included
+
+
 def apply_criteria(metadata: pd.DataFrame, criteria: dict,
-                   numerical: list) -> tuple:
+                   numerical: list, messages: list) -> tuple:
     """
     Parameters
     ----------
@@ -260,53 +314,33 @@ def apply_criteria(metadata: pd.DataFrame, criteria: dict,
         Inclusion/exclusion criteria to apply.
     numerical : list
         Metadata variables that are numeric.
+    messages : list
+        Message to print in case of error.
 
     Returns
     -------
     flowchart : list
-        Steps of the workflow with samples counts.
-    flowchart2 : list
         Steps of the workflow with samples counts (simpler representation).
     included : pd.DataFrame
         Metadata for the included samples only.
     """
 
     flowchart = []
-    flowchart2 = []
     included = metadata.copy()
     first_step = True
-    prev_nam, prev_count, cur_name, cur_count = None, None, None, None
     for (var, index), values in criteria.items():
 
-        # filter based on the criteria, and report the delta and the number of samples left
-        if index == '0':
-            cur_name = 'No_%s' % var
-            included = included.loc[~included[var].fillna('nan').str.lower().isin([x.lower() for x in values])]
-        elif index == '1':
-            cur_name = var
-            included = included.loc[included[var].isin(values)]
-        elif index == '2':
-            if var not in numerical:
-                print('Metadata variable %s is not numerical (skipping)' % var)
-                continue
-            cur_name = 'Range_%s' % var
-            crit_min = values[0]
-            if crit_min:
-                included = included.loc[(included[var].fillna((crit_min - 1)) > crit_min)]
-            crit_max = values[1]
-            if crit_max:
-                included = included.loc[(included[var].fillna((crit_max + 1)) < crit_max)]
+        cur_name, boolean, included = do_filtering(included, var, index, values, numerical, messages)
+        if boolean:
+            continue
 
         cur_count = included.shape[0]
         if first_step:
-            flowchart.append('Input_metadata_%s -> %s_%s' % (metadata.shape[0], cur_name, cur_count))
-            flowchart2.extend([
+            flowchart.extend([
                 ['Input metadata', metadata.shape[0], None, None, None],
                 [cur_name, cur_count, str(var), '\n'.join(map(str, values)), str(index)]
             ])
             first_step = False
         else:
-            flowchart.append('%s_%s -> %s_%s' % (prev_nam, prev_count, cur_name, cur_count))
-            flowchart2.append([cur_name, cur_count, str(var), '\n'.join(map(str, values)), str(index)])
-        prev_nam, prev_count = cur_name, cur_count
-    return flowchart, flowchart2, included
+            flowchart.append([cur_name, cur_count, str(var), '\n'.join(map(str, values)), str(index)])
+    return flowchart, included

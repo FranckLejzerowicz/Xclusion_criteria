@@ -6,10 +6,12 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import os
 import unittest
 import pandas as pd
 import pkg_resources
+
+from pandas.testing import assert_frame_equal
+
 
 from Xclusion_criteria._xclusion_crits import (
     check_in_md,
@@ -19,7 +21,9 @@ from Xclusion_criteria._xclusion_crits import (
     check_key,
     check_numeric_indicator,
     check_var_in_md,
-    get_criteria
+    get_criteria,
+    apply_criteria,
+    do_filtering
 )
 
 ROOT = pkg_resources.resource_filename('Xclusion_criteria', 'tests')
@@ -178,6 +182,13 @@ class TestCrits(unittest.TestCase):
         self.assertEqual(test_criteria, {})
         self.assertEqual(test_messages, ['Values to subset for must be in a list format (antibiotic_history skipped)'])
 
+        wrong_minmax = '%s/criteria/criteria_wrong_minmax.yml' % ROOT
+        test_criteria, test_messages = get_criteria(None, wrong_minmax, self.md, self.nulls)
+        self.assertEqual(test_criteria, {})
+        self.assertEqual(
+            test_messages,
+            ['For min-max subsetting, two-items list need: no min (or no max) should be "None"'])
+
         test_criteria, test_messages = get_criteria((('antibiotic_history', '0', 'Yes/No'),),
                                                     None, self.md, self.nulls)
         self.assertEqual(test_criteria, {('antibiotic_history', '0'): ['No', 'Yes']})
@@ -197,10 +208,71 @@ class TestCrits(unittest.TestCase):
                                                     None, self.md, self.nulls)
         self.assertEqual(
             test_messages,
-            ['[Warning] Subset values for variable antibiotic_history for not in table\n - New']
-        )
+            ['[Warning] Subset values for variable antibiotic_history for not in table\n - New'])
         self.assertEqual(test_criteria, {('antibiotic_history', '1'): ['No', 'Yes']})
 
+    def test_do_filtering(self):
+
+        md_abx_filt_y = pd.DataFrame({'antibiotic_history': ['Yes'], 'col2': [1.], 'col3': ['1.3']})
+        test_name, test_boolean, test_md_abx_y = do_filtering(self.md, 'antibiotic_history', '1', ['Yes'], [], [])
+        md_abx_filt_y.col3 = md_abx_filt_y.col3.astype('object')
+        test_md_abx_y.col3 = md_abx_filt_y.col3.astype('object')
+        self.assertEqual(test_name, 'antibiotic_history')
+        self.assertEqual(test_boolean, False)
+        assert_frame_equal(md_abx_filt_y, test_md_abx_y)
+
+        md_abx_filt_n = pd.DataFrame({'antibiotic_history': ['No', 'No'], 'col2': [2., 3.], 'col3': [1, 'missing']})
+        test_name, test_boolean, test_md_abx_x = do_filtering(self.md, 'antibiotic_history', '1', ['No'], [], [])
+        md_abx_filt_n.index = range(md_abx_filt_n.shape[0])
+        test_md_abx_x.index = range(test_md_abx_x.shape[0])
+        self.assertEqual(test_name, 'antibiotic_history')
+        self.assertEqual(test_boolean, False)
+        assert_frame_equal(md_abx_filt_n, test_md_abx_x)
+
+        md_abx_filt_n = pd.DataFrame({'antibiotic_history': ['No', 'No'], 'col2': [2., 3.], 'col3': [1, 'missing']})
+        test_name, test_boolean, test_md_abx_x = do_filtering(self.md, 'antibiotic_history', '0', ['Yes'], [], [])
+        md_abx_filt_n.index = range(md_abx_filt_n.shape[0])
+        test_md_abx_x.index = range(test_md_abx_x.shape[0])
+        self.assertEqual(test_name, 'No_antibiotic_history')
+        self.assertEqual(test_boolean, False)
+        assert_frame_equal(md_abx_filt_n, test_md_abx_x)
+
+        md_abx_filt_mm = pd.DataFrame({'antibiotic_history': ['Yes', 'No'], 'col2': [1., 2.], 'col3': ['1.3', '1']})
+        test_name, test_boolean, test_md_abx_mm = do_filtering(self.md, 'col2', '2', [None, 3], ['col2'], [])
+        # weirdly, if the two col3 contents are "object" and identical, the test fails, hence:
+        md_abx_filt_mm.col3 = md_abx_filt_mm.col3.astype('float')
+        test_md_abx_mm.col3 = test_md_abx_mm.col3.astype('float')
+        md_abx_filt_mm.index = range(md_abx_filt_mm.shape[0])
+        test_md_abx_mm.index = range(test_md_abx_mm.shape[0])
+        self.assertEqual(test_name, 'Range_col2')
+        self.assertEqual(test_boolean, False)
+        assert_frame_equal(md_abx_filt_mm, test_md_abx_mm)
+
+        md_abx_filt_mm = pd.DataFrame({'antibiotic_history': ['No'], 'col2': [2.], 'col3': ['1']})
+        test_name, test_boolean, test_md_abx_mm = do_filtering(self.md, 'col2', '2', [1, 3], ['col2'], [])
+        # weirdly, if the two col3 contents are "object" and identical, the test fails, hence:
+        md_abx_filt_mm.col3 = md_abx_filt_mm.col3.astype('float')
+        test_md_abx_mm.col3 = test_md_abx_mm.col3.astype('float')
+        md_abx_filt_mm.index = range(md_abx_filt_mm.shape[0])
+        test_md_abx_mm.index = range(test_md_abx_mm.shape[0])
+        self.assertEqual(test_name, 'Range_col2')
+        self.assertEqual(test_boolean, False)
+        assert_frame_equal(md_abx_filt_mm, test_md_abx_mm)
+
+        test_messages = []
+        test_name, test_boolean, output_md = do_filtering(self.md, 'col2', '2', [None, 3], ['col3'], test_messages)
+        self.assertEqual(test_name, '')
+        self.assertEqual(test_boolean, True)
+        self.assertEqual(test_messages, ['Metadata variable col2 is not numerical (skipping)'])
+
+        test_messages = []
+        test_name, test_boolean, output_md = do_filtering(self.md, 'col2', '2', [None, None], ['col2'], test_messages)
+        self.assertEqual(test_name, '')
+        self.assertEqual(test_boolean, True)
+        self.assertEqual(test_messages, ['[Warning] Both numerical bounds for col2 are "None" (skipping)'])
+
+    # def test_apply_criteria(self):
+    #     apply_criteria()
 
 if __name__ == '__main__':
     unittest.main()

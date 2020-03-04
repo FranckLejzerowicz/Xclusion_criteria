@@ -47,17 +47,16 @@ def xclusion_criteria(
     nulls = [x.strip() for x in open('%s/nulls.txt' % RESOURCES).readlines()]
 
     metadata = read_meta_pd(m_metadata_file)
-    criteria, message = get_criteria(p_criterion, i_criteria, metadata, nulls)
+    criteria, messages = get_criteria(p_criterion, i_criteria, metadata, nulls)
 
     dtypes = get_dtypes(metadata, nulls)
     numerical, categorical = split_variables_types(dtypes, criteria)
 
-    flowchart, flowchart2, included = apply_criteria(metadata, criteria, list(categorical))
+    flowchart, included = apply_criteria(metadata, criteria, list(categorical), list(messages))
     included.reset_index().to_csv(o_included, index=False, sep='\t')
-    show_flowchart(list(flowchart))
 
     excluded = metadata.loc[[x for x in metadata.index if x not in included.index],:].copy()
     excluded.reset_index().to_csv(o_excluded, index=False, sep='\t')
 
     make_visualizations(included, i_plot_groups, o_visualization,
-                        list(numerical), list(categorical), list(flowchart2))
+                        list(numerical), list(categorical), list(flowchart))
