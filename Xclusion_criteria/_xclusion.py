@@ -8,7 +8,7 @@
 
 import pkg_resources
 
-from Xclusion_criteria._xclusion_md import read_meta_pd
+from Xclusion_criteria._xclusion_io import read_meta_pd
 from Xclusion_criteria._xclusion_dtypes import get_dtypes, split_variables_types
 from Xclusion_criteria._xclusion_crits import get_criteria, apply_criteria
 from Xclusion_criteria._xclusion_plot import make_visualizations, show_flowchart
@@ -47,7 +47,7 @@ def xclusion_criteria(
     nulls = [x.strip() for x in open('%s/nulls.txt' % RESOURCES).readlines()]
 
     metadata = read_meta_pd(m_metadata_file)
-    criteria = get_criteria(p_criterion, i_criteria, metadata, nulls)
+    criteria, message = get_criteria(p_criterion, i_criteria, metadata, nulls)
 
     dtypes = get_dtypes(metadata, nulls)
     numerical, categorical = split_variables_types(dtypes, criteria)

@@ -10,11 +10,8 @@ import unittest
 import pkg_resources
 import pandas as pd
 
-from os.path import abspath
 from pandas.testing import assert_frame_equal
-
-from Xclusion_criteria._xclusion_md import read_meta_pd
-# from Xclusion_criteria._xclusion_dtypes import get_dtypes, split_variables_types
+from Xclusion_criteria._xclusion_io import read_meta_pd, read_i_criteria
 
 ROOT = pkg_resources.resource_filename('Xclusion_criteria', 'tests')
 
@@ -46,22 +43,8 @@ class TestMd(unittest.TestCase):
         md_missing = read_meta_pd(md_missing_fp)
         assert_frame_equal(md_missing, self.md_res)
 
-
-# class TestDtypes(unittest.TestCase):
-#
-#     def setUp(self):
-#         self.md_res = pd.DataFrame({
-#             'col1': [1, 2, np.nan],
-#             'col2': [1.3, 1.5, 3.0],
-#             'col3': ['x', 'y', 'z']
-#         }, index = ['A', 'B', 'C'])
-#         self.md_res.index.name = 'sample_name'
-#
-#     def test_read_meta_pd(self):
-#         dtype_1_fp = '%s/metadata/test_dtypes/dtype_1_fp.tsv' % ROOT
-#         dtype_1 = read_meta_pd(dtype_1_fp)
-#         assert_frame_equal(dtype_1, self.md_res)
-
+    def test_read_i_criteria(self):
+        pass
 
 if __name__ == '__main__':
     unittest.main()

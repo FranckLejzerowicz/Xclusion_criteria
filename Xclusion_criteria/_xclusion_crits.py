@@ -6,13 +6,183 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import yaml
 import pandas as pd
-from os.path import isfile
+from Xclusion_criteria._xclusion_io import read_i_criteria
+
+
+def check_factors(var: str, values: list, metadata: pd.DataFrame, messages: list) -> tuple:
+    """
+    Parameters
+    ----------
+    var : str
+        Metadata variable in criteria.
+    values : list
+        Metadata variables in criteria.
+    metadata : pd.DataFrame
+        Metadata table.
+    messages : list
+        Message to print in case of error.
+
+    Returns
+    -------
+    boolean : bool
+        Whether to keep the key/value or not.
+    common_vars : list
+        Variable present in both the passed values and
+        the metadata factors for the current variable.
+    """
+    boolean = False
+    values_set = set([x for x in values if x != 'NULLS'])
+    md_factors = set(metadata[var])
+    common_vars = values_set & md_factors
+    if not len(common_vars):
+        messages.append('Subset values for variable %s for not in table (skipped)' % var)
+        boolean = True
+    elif len(values_set) > len(common_vars):
+        values_out = list(values_set ^ common_vars)
+        messages.append('[Warning] Subset values for variable %s for not in table\n'
+                        ' - %s' % (var, '\n - '.join(values_out)))
+    return boolean, sorted(common_vars)
+
+
+
+def check_index(index: str, values: list, messages: list) -> bool:
+    """
+    Parameters
+    ----------
+    index : str
+        Numeric indicator.
+    values : list
+        Metadata variables in criteria.
+    messages : list
+        Message to print in case of error.
+
+    Returns
+    -------
+    boolean : bool
+        Whether to keep the key/value or not.
+    """
+    boolean = False
+    if index == '2' and len(values) != 2:
+        messages.append('For min-max subsetting, two-items list need: no min (or no max) should be "None"')
+        boolean = True
+    return boolean
+
+
+def check_islist(var: str, values, messages: list) -> bool:
+    """
+    Parameters
+    ----------
+    var : str
+        Metadata variable in criteria.
+    values : list or else
+        Should be a list of factors.
+    messages : list
+        Message to print in case of error.
+
+    Returns
+    -------
+    boolean : bool
+        Whether to keep the key/value or not.
+    """
+    boolean = False
+    if not isinstance(values, list):
+        messages.append('Values to subset for must be in a list format (%s skipped)' % var)
+        boolean = True
+    return boolean
+
+
+def check_numeric_indicator(var: str, index: str, messages: list) -> bool:
+    """
+    Parameters
+    ----------
+    var : str
+        Metadata variable in criteria.
+    index : str
+        Numeric indicator.
+    messages : list
+        Message to print in case of error.
+
+    Returns
+    -------
+    boolean : bool
+        Whether to keep the key/value or not.
+    """
+    boolean = False
+    if index not in ['0', '1', '2']:
+        messages.append('Numeric indicator not "0", "1" or "2" (%s) (%s skipped)' % (index, var))
+        boolean = True
+    return boolean
+
+
+def check_var_in_md(var: str, columns: list, messages: list) -> bool:
+    """
+    Parameters
+    ----------
+    var : str
+        Metadata variable in criteria.
+    columns : list
+        Metadata variables in table.
+    messages : list
+        Message to print in case of error.
+
+    Returns
+    -------
+    boolean : bool
+        Whether to keep the key/value or not.
+    """
+    boolean = False
+    if var not in columns:
+        messages.append('Variable %s not in metadata (skipped)' % var)
+        boolean = True
+    return boolean
+
+
+def check_in_md(values: list, columns: list, criteria: dict,
+                messages: list, nulls: list) -> None:
+    """
+    Parameters
+    ----------
+    values : list
+        Metadata variables in criteria.
+    columns : list
+        Metadata variables in table.
+    criteria : dict
+        Inclusion/exclusion criteria to apply.
+    messages : list
+        Message to print in case of error.
+    nulls : list
+        Factors to be interpreted as np.nan.
+    """
+    for var in values:
+        if check_var_in_md(var, columns, messages):
+            continue
+        criteria[(var, '0')] = nulls
+
+
+def check_key(key: str, messages: list) -> bool:
+    """
+    Parameters
+    ----------
+    key : str
+        Current criterion.
+    messages : list
+        Message to print in case of error.
+
+    Returns
+    -------
+    boolean : bool
+        Whether to keep the key/value or not.
+    """
+    boolean = False
+    if ',' not in key or len(key.split(',')) != 2:
+        messages.append('Must have a metadata variable and a numeric separated by a comma (",")')
+        boolean = True
+    return boolean
 
 
 def get_criteria(p_criterion: tuple, i_criteria: str,
-                 metadata: pd.DataFrame, nulls: list) -> dict:
+                 metadata: pd.DataFrame, nulls: list) -> tuple:
     """
     Collect the inclusion/exclusion criteria to
     apply based on the yaml file and superseded
@@ -28,79 +198,55 @@ def get_criteria(p_criterion: tuple, i_criteria: str,
         inclusion/exclusion criteria to apply.
     metadata : pd.DataFrame
         Metadata table.
-
+    nulls : list
         Factors to be interpreted as np.nan.
 
     Returns
     -------
     criteria : dict
         Inclusion/exclusion criteria to apply.
+    message : str
+        Message to print in case of error.
     """
-    criteria = {}
-    if i_criteria and isfile(i_criteria):
-        with open(i_criteria) as handle:
-            parsed_criteria = yaml.load(handle, Loader=yaml.FullLoader)
-            for key, values in parsed_criteria.items():
-                if key == 'no_nan':
-                    for var in values:
-                        if var not in metadata.columns:
-                            print('no-nan variable %s not in metadata (skipped)' % var)
-                        criteria[(var, '0')] = nulls
-                    continue
-                if ',' not in key or len(key.split(',')) != 2:
-                    print('Must have a metadata variable and a numeric separated by a comma (",")\nExiting')
-                    continue
-                var, index = key.split(',')
-                if var not in metadata.columns:
-                    print('Variable %s not in metadata (skipped)' % var)
-                    continue
-                if index not in ['0', '1', '2']:
-                    print('Numeric indicator not "0", "1" or "2" (%s) (%s skipped)' % (index, var))
-                    continue
-                if not isinstance(values, list):
-                    print('Values to subset for must be in a list format (%s skipped)' % var)
-                    continue
-                if index == '2' and len(values) != 2:
-                    print('For min-max subsetting, two-items list need: no min (or no max) should be "None"')
-                    continue
-                else:
-                    values_set = set([x for x in values if x!='NULLS'])
-                    md_factors = set(metadata[var])
-                    if not len(values_set & md_factors):
-                        print('Subset values for variable %s for not in table (skipped)' % var)
-                        continue
-                    elif len(values_set) > len(values_set & md_factors):
-                        values_out = list(values_set ^ (values_set & md_factors))
-                        print('[Warning] Subset values for variable %s for not in table\n'
-                              ' - %s' % (var, '\n - '.join(values_out)))
-                    criteria[(var, index)] = values
+    messages, criteria = [], {}
+    for key, values in read_i_criteria(i_criteria).items():
+
+        if key == 'no_nan':
+            check_in_md(values, list(metadata.columns), criteria, messages, nulls)
+            continue
+        if check_key(key, messages):
+            continue
+        var, index = key.split(',')
+        if check_var_in_md(var, list(metadata.columns), messages):
+            continue
+        if check_numeric_indicator(var, index, messages):
+            continue
+        if check_islist(var, values, messages):
+            continue
+        if check_index(index, values, messages):
+            continue
+        else:
+            boolean, common_values = check_factors(var, values, metadata, messages)
+            if boolean:
+                continue
+            criteria[(var, index)] = common_values
 
     if p_criterion:
         for criterion in p_criterion:
             var, index, values_ = criterion
-            if var not in metadata.columns:
-                print('Variable %s not in metadata (Skipped)' % var)
+            if check_var_in_md(var, list(metadata.columns), messages):
                 continue
-            if index not in ['0', '1', '2']:
-                print('Numeric indicator not "0", "1" or "2" (%s) (Skipped)' % index)
+            if check_numeric_indicator(var, index, messages):
                 continue
             values = values_.split('/')
-            if index == '2' and len(values) != 2:
-                print('For min-max subsetting, two-items list need: no min (or no max) should be "None"')
+            if check_index(index, values, messages):
                 continue
             else:
-                values_set = set(values)
-                md_factors = set(metadata[var])
-                if not len(values_set & md_factors):
-                    print('Subset values for variable %s for not in table (skipped)' % var)
+                boolean, common_values = check_factors(var, values, metadata, messages)
+                if boolean:
                     continue
-                elif len(values_set) > len(values_set & md_factors):
-                    values_out = list(values_set ^ (values_set & md_factors))
-                    print('[Warning] Subset values for variable %s for not in table\n'
-                          ' - %s' % (var, '\n - '.join(values_out)))
-                criteria[(var, index)] = values
-
-    return criteria
+                criteria[(var, index)] = common_values
+    return criteria, messages
 
 
 def apply_criteria(metadata: pd.DataFrame, criteria: dict,

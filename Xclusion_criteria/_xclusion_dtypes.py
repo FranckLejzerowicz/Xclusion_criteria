@@ -118,10 +118,10 @@ def check_dtype_object(factors: pd.Series) -> list:
     has_non_float = False
     has_tf = False
     # for the unique factors of the current variable
-    for val in factors.unique().tolist():
-        if str(val) == 'nan':
+    for val in set(map(str, factors.tolist())):
+        if val == 'nan':
             has_nan = True # if np.nan in the factors
-        elif str(val) in ['True', 'False']:
+        elif val in ['True', 'False']:
             has_tf = True  # if np.nan in the factors
         else:
             # check if the non-np.nan values are float
