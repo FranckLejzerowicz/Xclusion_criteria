@@ -72,7 +72,7 @@ Inclusion/Exclusion criteria can be passed either through a simple yaml file (`-
     ```
     (but there must be 2 items...)
     
-    The key `no_nan` is special: if present, it lists the variables will be filtered so that no sample will be left
+    The key `no_nan` is special: if present, it lists the variables that will be filtered so that no sample will be left
     that has a _missing value_ for these variables. These _missing values_ are formal NumPy's "nan" (`np.nan`), as
     well as any of these terms:
     - unknown
@@ -86,7 +86,7 @@ Inclusion/Exclusion criteria can be passed either through a simple yaml file (`-
 
 - _option_ `-c`: One criteria, composed of three space-separated elements (overrides the criteria if exists in the yaml 
 file for the same `(variable + selection indicator)`. Can be used multiple times, e.g.
-    - `-c sex 1 Male -c age_cat 0 baby/teen`. This commands will (i) keep males **and** (ii) remove babies and teens, 
+    - `-c sex 1 Male -c age_cat 0 "baby/teen"`. This commands will (i) keep males **and** (ii) remove babies and teens, 
     respectively.
 - _option_ `-z`: Path to a yaml file containing the plotting's categorical variables, e.g.:
     ```
