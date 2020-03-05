@@ -10,11 +10,10 @@ import unittest
 import pandas as pd
 import pkg_resources
 
-from pandas.testing import assert_frame_equal
-
 from Xclusion_criteria._xclusion_plot import get_parsed_plot_groups
 
 ROOT = pkg_resources.resource_filename('Xclusion_criteria', 'tests')
+
 
 class MyPlot(unittest.TestCase):
 
@@ -27,6 +26,7 @@ class MyPlot(unittest.TestCase):
         plot_ok = '%s/plot/plot_ok.yml' % ROOT
         plot_groups = get_parsed_plot_groups(plot_ok)
         self.assertEqual(plot_groups, {'categories': ['age_cat']})
+
 
 if __name__ == '__main__':
     unittest.main()

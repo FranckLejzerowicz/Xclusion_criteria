@@ -54,6 +54,52 @@ def make_visualizations(included: pd.DataFrame, i_plot_groups: str,
     # make_explorer_chart(included.reset_index(), o_explorer, numerical, categorical)
 
 
+def add_unique_per_cat_col(included_merged: pd.DataFrame) -> list:
+    """
+    Parameters
+    ----------
+    included_merged : pd.DataFrame
+        Table to which a column is to be added
+
+    Returns
+    -------
+    unique_per_cat_col : list
+        Column to add that tells whether the sample is the first encountered for each
+        - sample_name
+        - categorical variable
+        - categorical variable's factor
+    """
+    unique_per_cat_col_set = set()
+    unique_per_cat_col = []
+    for row in included_merged[['cat_var', 'cat_val']].values:
+        tow = tuple(row)
+        if tow not in unique_per_cat_col_set:
+            unique_per_cat_col_set.add(tow)
+            unique_per_cat_col.append('ID')
+        else:
+            unique_per_cat_col.append(np.nan)
+    return unique_per_cat_col
+
+
+def get_sorted_factors(included_merged: pd.DataFrame) -> list:
+    """
+    Parameters
+    ----------
+    included_merged : pd.DataFrame
+        Merged the numeric and categorical tables.
+    Returns
+    -------
+    sorted_factors : list
+        All the factors, sorted per variable.
+    """
+    sorted_factors = []
+    for var, var_pd in included_merged.sort_values('cat_var').groupby('cat_var'):
+        for val in sorted(var_pd.cat_val):
+            if str(val) != 'nan':
+                sorted_factors.append(val)
+    return sorted_factors
+
+
 def make_user_chart(included_num: pd.DataFrame,
                     included_cat: pd.DataFrame,
                     plot_groups: dict,
@@ -78,60 +124,26 @@ def make_user_chart(included_num: pd.DataFrame,
 
     curves_pd = pd.DataFrame(flowchart, columns = ['step', 'samples', 'variable', 'values', 'indicator'])
     curves_pd['order'] = curves_pd.index.tolist()
+
+    # Selection progression figure (left panel)
     curve = altair.Chart(
-        curves_pd,
-        width=200,
-        height=200
+        curves_pd, width=200, height=200, title='Samples selection progression'
     ).mark_line(
         point=True
     ).encode(
-        x = altair.X('step', scale=altair.Scale(zero=False),
-                     sort=curves_pd.step.tolist()),
-        y = altair.Y('samples', scale=altair.Scale(zero=False)),
-        tooltip = ['step', 'samples', 'variable', 'values', 'indicator']
+        x=altair.X('step', scale=altair.Scale(zero=False), sort=curves_pd.step.tolist()),
+        y=altair.Y('samples', scale=altair.Scale(zero=False)),
+        tooltip=['step', 'samples', 'variable', 'values', 'indicator']
     )
 
-    included_num_us = included_num.unstack().reset_index().rename(columns={'level_0': 'num_var', 0: 'num_val'})
-    included_num_us = included_num_us.loc[~included_num_us.isna().any(axis=1),:]
-    included_num_us = pd.merge(included_num_us, included_num_us, on='sample_name')
-    included_merged_num_cols = ['sample_name', 'num_var_x', 'num_var_y', 'num_val_x', 'num_val_y']
-    included_num_us = included_num_us.loc[(included_num_us['num_var_x'] != included_num_us['num_var_y']), :]
-    included_num_us = included_num_us[included_merged_num_cols]
-
-    included_cat_us = included_cat.unstack().reset_index().rename(columns={'level_0': 'cat_var', 0: 'cat_val'})
-    included_cat_us = included_cat_us.loc[~included_cat_us.isna().any(axis=1),:]
+    included_num_us = get_included_us(included_num, 'num')
+    included_cat_us = get_included_us(included_cat, 'cat')
+    # merge the numeric and categorical tables
     included_merged = included_num_us.merge(included_cat_us, on='sample_name', how='left')
-    included_merged = included_merged.loc[~included_merged.isna().any(axis=1),:]
+    included_merged = included_merged.loc[~included_merged.isna().any(axis=1), :]
+    # add variable to indicate unique sample/variable/factor instances
+    included_merged['is_unique_ID_for_altair_plot'] =  add_unique_per_cat_col(included_merged)
 
-    unique_per_cat_col_set = set()
-    unique_per_cat_col = []
-    for row in included_merged[['cat_var', 'cat_val']].values:
-        tow = tuple(row)
-        if tow not in unique_per_cat_col_set:
-            unique_per_cat_col_set.add(tow)
-            unique_per_cat_col.append('ID')
-        else:
-            unique_per_cat_col.append(np.nan)
-    included_merged['is_unique_ID_for_altair_plot'] =  unique_per_cat_col
-
-    has_slider = False
-    slider_selection = None
-    # if 'slider' in plot_groups:
-    #     slider = plot_groups['slider']
-    #     if slider not in included_merged['num_var_x'].unique():
-    #         print('[Warning] Variable set for slider is not numeric:', slider)
-    #     else:
-    #         has_slider = True
-    #         slider_values = included_merged.loc[included_merged['num_var_x']==slider, 'num_val_x'].unique()
-    #         slider_altair = altair.binding_range(
-    #             min=min(map(int, slider_values)),
-    #             max=max(map(int, slider_values)),
-    #             step=1
-    #         )
-    #         slider_selection = altair.selection_single(bind=slider_altair,
-    #                                                    fields=['num_val_x'],
-    #                                                    name="%s_" % slider)
-    brush = altair.selection(type='interval', resolve='global')
     num_var_x = included_merged['num_var_x'].unique().tolist()
     num_var_y = included_merged['num_var_y'].unique().tolist()
     cont_dropdown_var_x = altair.binding_select(options=num_var_x)
@@ -144,82 +156,52 @@ def make_user_chart(included_num: pd.DataFrame,
                                                 bind=cont_dropdown_var_y,
                                                 init={'num_var_y': num_var_y[0]},
                                                 name="num_var_y", clear=False)
-    if has_slider:
-        scatter_chart = altair.Chart(
-            included_merged,
-            width=400,
-            height=400
-        ).mark_point(
-            point=True
-        ).encode(
-            x=altair.X('num_val_x:Q', scale=altair.Scale(zero=False)),
-            y=altair.Y('num_val_y:Q', scale=altair.Scale(zero=False)),
-            color=altair.condition(brush, 'num_val_y:Q', altair.ColorValue('gray')),
-            tooltip="sample_name:N"
-        ).add_selection(
-            brush,
-            cont_select_var_x,
-            cont_select_var_y,
-            slider_selection
-        ).transform_filter(
-            slider_selection
-        ).transform_filter(
-            cont_select_var_x
-        ).transform_filter(
-            cont_select_var_y
-        )
-    else:
-        scatter_chart = altair.Chart(
-            included_merged,
-            width=400,
-            height=400
-        ).mark_point(
-            filled=True
-        ).encode(
-            x=altair.X('num_val_x:Q', scale=altair.Scale(zero=False)),
-            y=altair.Y('num_val_y:Q', scale=altair.Scale(zero=False)),
-            color=altair.condition(brush, 'num_val_y:Q', altair.ColorValue('gray')),
-            tooltip="sample_name:N"
-        ).add_selection(
-            brush,
-            cont_select_var_x,
-            cont_select_var_y,
-        ).transform_filter(
-            cont_select_var_x
-        ).transform_filter(
-            cont_select_var_y
-        )
-    scatter_chart = scatter_chart.resolve_scale(
+    brush = altair.selection(type='interval', resolve='global')
+
+    # Scatter figure (left panel)
+    scatter_chart = altair.Chart(
+        included_merged, width=400, height=400, title='Numeric variables values per sample'
+    ).mark_point(
+        filled=True
+    ).encode(
+        x=altair.X('num_val_x:Q', scale=altair.Scale(zero=False)),
+        y=altair.Y('num_val_y:Q', scale=altair.Scale(zero=False)),
+        color=altair.condition(brush, 'num_val_y:Q', altair.ColorValue('gray')),
+        tooltip="sample_name:N"
+    ).add_selection(
+        brush, cont_select_var_x, cont_select_var_y,
+    ).transform_filter(
+        cont_select_var_x
+    ).transform_filter(
+        cont_select_var_y
+    ).resolve_scale(
         color='independent'
     )
-    sorted_cat_vars = sorted(included_merged['cat_var'].unique().tolist())
+
+    # Make barplot, including:
+    # - the bars
+    sorted_factors = get_sorted_factors(included_merged)
     bars_sel = altair.Chart(included_merged).mark_bar().encode(
-        x=altair.X(
-            'cat_val:N',
-            sort=[val for var in sorted_cat_vars
-                  for val in sorted(included_merged.loc[
-                                        included_merged['cat_var'] == var, 'cat_val'
-                                    ].unique().tolist()) if str(val) != 'nan']),
+        x=altair.X('cat_val:N', sort=sorted_factors),
         y='count(cat_val):Q',
         color='cat_var:N'
     ).properties(
-        width=600,
-        height=200
+        width=600, height=200, title='Number of samples per categorical variable'
     ).transform_filter(
         {'not': altair.FieldEqualPredicate(field='is_unique_ID_for_altair_plot', equal='ID')}
     )
-
+    # - the text on the bars
     text_sel = bars_sel.mark_text(
-        align='center',
-        baseline='middle',
-        yOffset=-10
+        align='center', baseline='middle', yOffset=-10
     ).encode(
         text='count(cat_val):Q'
     )
+    # merge bars and text
     meta_bars = (bars_sel + text_sel).transform_filter(
         brush
     )
 
+    # concatenate the three panels
     chart = (curve | scatter_chart | meta_bars)
     chart = chart.resolve_scale(
         color='independent'
@@ -237,14 +219,8 @@ def read_template_chart() -> dict:
 
 def read_html_template() -> list:
     """Read the template java code for resources."""
-    html_template = []
     html_template_fp = '%s/template.text.html' % RESOURCES
-    with open(html_template_fp) as f:
-        for ldx, line in enumerate(f):
-            if len(line.strip()) < 400:
-                html_template.append(line)
-            else:
-                html_template.append('      var spec = TO_REPLACE_HERE;\n')
+    html_template = open(html_template_fp).readlines()
     return html_template
 
 
@@ -380,3 +356,50 @@ def get_parsed_plot_groups(i_plot_groups: str) -> dict:
         with open(i_plot_groups) as handle:
             plot_groups.update(yaml.load(handle, Loader=yaml.FullLoader))
     return plot_groups
+
+
+def get_included_us(included_num_cat: pd.DataFrame, num_cat: str) -> pd.DataFrame:
+    """
+    Parameters
+    ----------
+    included_num_cat : pd.DataFrame
+        Metadata for the included samples only
+        and for numerical (or categorical) variables only.
+            e.g. input (for numerical):
+                            variable1   variable2   variable3
+                sample_name
+                sample.ID.1 100000001   200000001   nan
+                sample.ID.2 100000002   200000002   300000002
+    num_cat : str
+        Whether the input table is numerical (or categorical)
+
+    Returns
+    -------
+    included_num_us : pd.DataFrame
+        Metadata for the included samples only and for numerical (or categorical) variables
+        only but now unstacked to have the numeric values as one column, merged with itself.
+            e.g. output for the above input (for numerical):
+                sample_name num_var_x   num_var_y   num_val_x   num_val_y
+                sample.ID.1 variable1   variable2   100000001   200000001
+                sample.ID.2 variable1   variable2   100000002   200000002
+                sample.ID.2 variable1   variable3   100000002   300000002
+                sample.ID.1 variable2   variable1   200000001   100000001
+                sample.ID.2 variable2   variable1   200000002   100000002
+                sample.ID.2 variable2   variable3   200000002   300000002
+                sample.ID.2 variable3   variable1   300000002   100000002
+                sample.ID.2 variable3   variable2   300000002   200000002
+        Note that the nan value is removed and that the 2-columns format is symmetric.
+    """
+    included_num_cat_us = included_num_cat.unstack().reset_index().rename(
+        columns={'level_0': '%s_var' % num_cat, 0: '%s_val' % num_cat})
+    included_num_cat_us = included_num_cat_us.loc[~included_num_cat_us.isna().any(axis=1), :]
+
+    if num_cat == 'num':
+        included_num_cat_us = pd.merge(included_num_cat_us, included_num_cat_us, on='sample_name')
+        included_merged_num_cols = ['sample_name', 'num_var_x', 'num_var_y', 'num_val_x', 'num_val_y']
+        included_num_cat_us = included_num_cat_us.loc[
+                          (included_num_cat_us['num_var_x'] !=
+                           included_num_cat_us['num_var_y']), :]
+        included_num_cat_us = included_num_cat_us[included_merged_num_cols]
+
+    return included_num_cat_us
