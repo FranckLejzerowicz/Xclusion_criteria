@@ -52,12 +52,15 @@ setup(
     url="https://github.com/FranckLejzerowicz/Xclusion_criteria",
     packages=find_packages(),
     install_requires=[
-        "click",
+        "click >= 6.7",
         'numpy >= 1.12.1',
-        'pandas >= 0.10.0',
+        'pandas >= 0.19.0',
         'altair >= 3.2.0',
-        "matplotlib",
-        "pyyaml"
+        'cython >= 0.29.15',
+        'biom-format >= 2.1.5',
+        'redbiom >= 0.3.5',
+        'matplotlib',
+        'pyyaml'
     ],
     classifiers=classifiers,
     entry_points={'console_scripts': standalone},

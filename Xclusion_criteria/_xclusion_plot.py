@@ -21,7 +21,7 @@ RESOURCES = pkg_resources.resource_filename('Xclusion_criteria', 'resources')
 
 def make_visualizations(included: pd.DataFrame, i_plot_groups: str,
                         o_visualization: str, numerical: list,
-                        categorical: list, flowchart: list) -> None:
+                        categorical: list, flowcharts: dict) -> None:
     """
     Parameters
     ----------
@@ -35,20 +35,25 @@ def make_visualizations(included: pd.DataFrame, i_plot_groups: str,
         Metadata variables that are numeric.
     categorical : list
         Metadata variables that are categorical.
-    flowchart : list
+    flowcharts : dict
         Steps of the workflow with samples counts (simple representation).
     """
     included_num = included[numerical].copy()
     included_cat = included[categorical].copy()
 
     plot_groups = get_parsed_plot_groups(i_plot_groups)
+    if 'categories' not in plot_groups or not plot_groups['categories']:
+        included_cat['number_of_samples'] = 'number_of_samples'
+        included_cat.drop(columns=[x for x in included_cat.columns if x!='number_of_samples'], inplace=True)
+    else:
+        included_cat = included_cat[plot_groups['categories']]
 
     o_visualization_dir = dirname(o_visualization)
     if not isdir(o_visualization_dir):
         os.makedirs(o_visualization_dir)
     if not o_visualization.endswith('.html'):
         o_visualization = '%s.html' % o_visualization
-    make_user_chart(included_num, included_cat, plot_groups, flowchart, o_visualization)
+    make_user_chart(included_num, included_cat, flowcharts, o_visualization)
 
     # o_explorer = '%s_metadataExplorer.html' % splitext(o_visualization)[0]
     # make_explorer_chart(included.reset_index(), o_explorer, numerical, categorical)
@@ -102,8 +107,7 @@ def get_sorted_factors(included_merged: pd.DataFrame) -> list:
 
 def make_user_chart(included_num: pd.DataFrame,
                     included_cat: pd.DataFrame,
-                    plot_groups: dict,
-                    flowchart: list,
+                    flowcharts: dict,
                     o_visualization: str) -> None:
     """
     Parameters
@@ -114,26 +118,36 @@ def make_user_chart(included_num: pd.DataFrame,
     included_cat : pd.DataFrame
         Metadata for the included samples only
         and for categorical variables only.
-    plot_groups : dict
-        Groups (values) for barplots and scatters (keys).
-    flowchart : list
+    flowcharts : dict
         Steps of the workflow with samples counts (simple representation).
     o_visualization : str
         Path to output visualization for the included samples only.
     """
 
-    curves_pd = pd.DataFrame(flowchart, columns = ['step', 'samples', 'variable', 'values', 'indicator'])
-    curves_pd['order'] = curves_pd.index.tolist()
+    flowcharts_pds = []
+    for step in ['init', 'filter', 'add']:
+        if step in flowcharts:
+            flowchart_pd = pd.DataFrame(flowcharts[step],
+                                        columns=['filter', 'samples', 'variable', 'values', 'indicator'])
+            flowchart_pd['step'] = step
+            flowcharts_pds.append(flowchart_pd)
+    flowcharts_pd = pd.concat(flowcharts_pds, axis=0, sort=False)
+
+    filter_order = []
+    for f in flowcharts_pd['filter'].tolist():
+        if f not in filter_order:
+            filter_order.append(f)
 
     # Selection progression figure (left panel)
     curve = altair.Chart(
-        curves_pd, width=200, height=200, title='Samples selection progression'
+        flowcharts_pd, width=200, height=200, title='Samples selection progression'
     ).mark_line(
         point=True
     ).encode(
-        x=altair.X('step', scale=altair.Scale(zero=False), sort=curves_pd.step.tolist()),
+        x=altair.X('filter', scale=altair.Scale(zero=False), sort=filter_order),
         y=altair.Y('samples', scale=altair.Scale(zero=False)),
-        tooltip=['step', 'samples', 'variable', 'values', 'indicator']
+        color='step',
+        tooltip=['step', 'filter', 'samples', 'variable', 'values', 'indicator']
     )
 
     included_num_us = get_included_us(included_num, 'num')

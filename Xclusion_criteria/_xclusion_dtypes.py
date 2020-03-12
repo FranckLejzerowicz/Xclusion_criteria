@@ -166,7 +166,8 @@ def get_dtypes(metadata: pd.DataFrame, nulls: list) -> dict:
     return dtypes
 
 
-def split_variables_types(dtypes: dict, criteria: dict) -> tuple:
+def split_variables_types(dtypes: dict, criteria: dict,
+                          numerical: list, categorical: list) -> None:
     """
     Split variables of each metadata according to
     whether it is numeric or categorical.
@@ -178,25 +179,21 @@ def split_variables_types(dtypes: dict, criteria: dict) -> tuple:
         Value   = Metadata variable's dtype.
     criteria : dict
         Inclusion/exclusion criteria to apply.
-
-    Returns
-    -------
     numerical : list
         Metadata variables that are numeric.
     categorical : list
         Metadata variables that are categorical.
     """
-    numerical = []
-    categorical = []
+    all_criteria_variables = set(
+        [y[0] for x in ['init', 'add', 'filter'] for y in criteria[x].keys() if x in criteria]
+    )
     for var, dtype in dtypes.items():
-        if dtype == 'object':
-            if var not in [x[0] for x in criteria]:
+        if str(dtype) == 'object':
+            if var not in all_criteria_variables:
                 continue
             categorical.append(var)
-        elif dtype in ['int', 'float']:
+        elif str(dtype) in ['int', 'float']:
             numerical.append(var)
-
-    return numerical, categorical
 
 
 def check_num_cat_lists(numerical: list, categorical: list, messages: list) -> bool:

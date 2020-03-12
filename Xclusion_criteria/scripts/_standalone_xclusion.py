@@ -18,19 +18,19 @@ from Xclusion_criteria import __version__
     help="Metadata file on which to apply included/exclusion criteria."
 )
 @click.option(
-    "-c", "--p-criterion", nargs=3, required=False, multiple=True, default=None,
-    show_default=True, help="Criterion to use for metadata filtering. "
-                            "Use 3 space-separated terms for filtering: (i) the variable, "
-                            "(ii) a numeric indicator (0, 1 or 2) and (iii) the '/'-separated "
-                            "variable factors, e.g.: '-p sample_type 1 Stool' (to include only "
-                            "stool sample types), or '-p sample_type 0 Stool/Skin' (to exclude "
-                            "all stool and skin sample types). The '2' indicator indicates a "
-                            "numeric data subsetting. In this case, the '/'-separated variable "
-                            "factors must start with either '>',  '>=', '<' or '<='."
+    "-c", "--i-criteria", required=False, default=None, show_default=True,
+    help="Must be a yaml file (see README or 'examples/criteria.yml')."
+)
+
+@click.option(
+    "-r", "--p-redbiom-context", required=False,
+    default="Deblur-Illumina-16S-V4-150nt-780653", show_default=True,
+    help="Redbiom context for fetching 16S data from Qiita."
 )
 @click.option(
-    "-y", "--i-criteria", required=False, default=None, show_default=True,
-    help="Must be a yaml file (see README or 'examples/criteria.yml')."
+    "-b", "--p-bloom-sequences", required=False, default=None, show_default=False,
+    help="Fasta file containing the sequences known to bloom in fecal samples "
+         "(defaults to 'newblooms.all.fasta' file from package's folder 'resources')."
 )
 @click.option(
     "-z", "--i-plot-groups", required=False, default=None, show_default=True,
@@ -48,27 +48,41 @@ from Xclusion_criteria import __version__
     "-viz", "--o-visualization", required=True,
     help="Output metadata explorer for the included samples only."
 )
+@click.option(
+    "--fetch/--no-fetch", default=False, show_default=True,
+    help="Get the 16S data from RedBiom and apply microbiome filters."
+)
+@click.option(
+    "--unique/--no-unique", default=True, show_default=True,
+    help="Keep a unique sample per host (most read, or most features)."
+)
 @click.version_option(__version__, prog_name="Xclusion_criteria")
 
 
 def standalone_xclusion(
         m_metadata_file,
-        p_criterion,
         i_criteria,
         o_excluded,
         o_included,
         i_plot_groups,
-        o_visualization
+        o_visualization,
+        p_redbiom_context,
+        p_bloom_sequences,
+        unique,
+        fetch
 ):
 
     xclusion_criteria(
         m_metadata_file,
-        p_criterion,
         i_criteria,
         o_excluded,
         o_included,
         i_plot_groups,
-        o_visualization
+        o_visualization,
+        p_redbiom_context,
+        p_bloom_sequences,
+        unique,
+        fetch
     )
 
 
