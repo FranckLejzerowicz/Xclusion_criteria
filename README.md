@@ -31,7 +31,11 @@ pip install -e .
 
 #### Requisites
 
-If you want to make use of the functionality allowinf the fetching of 
+- Some third-party dependencies must be installed: `numpy >= 1.18.1`, `pandas >= 1.0.1` and `cython >= 0.29.15`. 
+You may use `pip install numpy=1.18.1` etc (think of doing it in a conda environment to not break the 
+functioning of other tools..._) 
+
+- If you want to make use of the functionality allowinf the fetching of 
 16S data from Qiita, please install [Xrbfetch](https://github.com/FranckLejzerowicz/Xrbfetch)
 
 ## Input
