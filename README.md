@@ -18,25 +18,30 @@ samples left in the selection and apply basic filters on it (for this, the
 thrid-party tool [Xrbfetch](https://github.com/FranckLejzerowicz/Xrbfetch)
 must be installed).
 
+
+
 ## Installation
 
+
+#### Dependencies
+
+
+`numpy >= 1.18.1`, `pandas >= 1.0.1`, `cython >= 0.29.15`
+
+#### Install
 
 ```
 git clone https://github.com/FranckLejzerowicz/Xclusion_criteria.git
 cd Xclusion_criteria
 pip install -e .
 ```
-
 *_Note that python and pip should be python3_
 
-#### Requisites
+#### Third-party tool
 
-- Some third-party dependencies must be installed: `numpy >= 1.18.1`, `pandas >= 1.0.1` and `cython >= 0.29.15`. 
-You may use `pip install numpy=1.18.1` etc (think of doing it in a conda environment to not break the 
-functioning of other tools..._) 
+If you want to make use of the functionality allowing fetching 16S data from Qiita,
+please install [Xrbfetch](https://github.com/FranckLejzerowicz/Xrbfetch)
 
-- If you want to make use of the functionality allowinf the fetching of 
-16S data from Qiita, please install [Xrbfetch](https://github.com/FranckLejzerowicz/Xrbfetch)
 
 ## Input
 
