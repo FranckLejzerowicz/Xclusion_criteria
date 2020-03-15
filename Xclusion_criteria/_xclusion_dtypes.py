@@ -184,6 +184,7 @@ def split_variables_types(dtypes: dict, criteria: dict,
     categorical : list
         Metadata variables that are categorical.
     """
+    print(criteria)
     all_criteria_variables = set(
         [y[0] for x in ['init', 'add', 'filter'] for y in criteria[x].keys() if x in criteria]
     )
