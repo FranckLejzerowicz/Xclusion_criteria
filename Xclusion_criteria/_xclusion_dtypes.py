@@ -189,8 +189,6 @@ def split_variables_types(dtypes: dict, criteria: dict,
     )
     for var, dtype in dtypes.items():
         if str(dtype) == 'object':
-            if var not in all_criteria_variables:
-                continue
             categorical.append(var)
         elif str(dtype) in ['int', 'float']:
             numerical.append(var)

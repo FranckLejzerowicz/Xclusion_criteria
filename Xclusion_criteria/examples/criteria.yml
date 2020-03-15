@@ -11,6 +11,10 @@ sequence:
     - "teen"
     - "baby"
 add:
-  alcohol_consumption:
+  alcohol_consumption,1:
+    - 'No'
+filter:
+  alcohol_types_red_wine,1:
+    - 'Yes'
 no_nan:
   - bmi

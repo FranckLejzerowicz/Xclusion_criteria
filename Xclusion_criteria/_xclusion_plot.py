@@ -44,9 +44,21 @@ def make_visualizations(included: pd.DataFrame, i_plot_groups: str,
     plot_groups = get_parsed_plot_groups(i_plot_groups)
     if 'categories' not in plot_groups or not plot_groups['categories']:
         included_cat['number_of_samples'] = 'number_of_samples'
-        included_cat.drop(columns=[x for x in included_cat.columns if x!='number_of_samples'], inplace=True)
+        included_cat = included_cat[['number_of_samples']]
     else:
-        included_cat = included_cat[plot_groups['categories']]
+        plot_groups_cats = list(plot_groups['categories'])
+        cat_to_plot = [x for x in plot_groups_cats if x in set(categorical)]
+        print(cat_to_plot)
+        cat_not_to_plot = [x for x in plot_groups_cats if x not in set(cat_to_plot)]
+        print(cat_not_to_plot)
+        if not cat_to_plot:
+            print(' --> all passed categories are not categorical')
+            included_cat['number_of_samples'] = 'number_of_samples'
+            cat_to_plot = ['number_of_samples']
+        elif cat_not_to_plot:
+            print(' --> %s passed categories that are not categorical:' % len(cat_not_to_plot))
+            print('\t* %s' % '\n\t* '.join(cat_not_to_plot))
+        included_cat = included_cat[cat_to_plot]
 
     o_visualization_dir = dirname(o_visualization)
     if not isdir(o_visualization_dir):
