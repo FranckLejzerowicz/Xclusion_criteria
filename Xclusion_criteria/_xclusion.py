@@ -85,7 +85,7 @@ def xclusion_criteria(
 
     dtypes = get_dtypes(metadata, nulls)
     split_variables_types(dtypes, criteria, numerical, categorical)
-    num_cat_bool, num_cat_message = check_num_cat_lists(numerical, categorical, messages)
+    num_cat_bool, num_cat_message = check_num_cat_lists(numerical, categorical)
     if num_cat_bool:
         print(num_cat_message)
         print('  -> Not producing a figure')
