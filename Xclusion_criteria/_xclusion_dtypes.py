@@ -194,7 +194,7 @@ def split_variables_types(dtypes: dict, criteria: dict,
             numerical.append(var)
 
 
-def check_num_cat_lists(numerical: list, categorical: list, messages: list) -> bool:
+def check_num_cat_lists(numerical: list, categorical: list, messages: list) -> tuple:
     """
     Parameters
     ----------
@@ -209,13 +209,15 @@ def check_num_cat_lists(numerical: list, categorical: list, messages: list) -> b
     -------
     boolean : bool
         Whether to stop processing or not.
+    message : str
+        Problem encountered with the numerical / categorical variables.
     """
     boolean = False
     if len(numerical) < 2:
-        messages.append('Not enough numerical variables in the metadata (%s)' % len(numerical))
+        message = 'Not enough numerical variables in the metadata (%s)' % len(numerical)
         boolean = True
     if len(categorical) < 1:
-        messages.append('Not enough categorical variables in the metadata (%s)' % len(categorical))
+        message = 'Not enough categorical variables in the metadata (%s)' % len(categorical)
         boolean = True
 
-    return boolean
+    return boolean, message

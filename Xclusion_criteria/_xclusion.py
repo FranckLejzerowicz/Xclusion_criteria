@@ -74,21 +74,35 @@ def xclusion_criteria(
 
     messages, numerical, categorical = [], [], []
     criteria = get_criteria(i_criteria, metadata, nulls, messages)
+    if not criteria:
+        print('No single criteria found: check input path / content\nExiting')
+        sys.exit(1)
+    if messages:
+        print('Problems encountered during criteria parsing:')
+        for message in messages:
+            print('; '.join(message))
+        messages = []
 
     dtypes = get_dtypes(metadata, nulls)
     split_variables_types(dtypes, criteria, numerical, categorical)
-    if check_num_cat_lists(numerical, categorical, messages):
-        print('Exiting')
-        sys.exit(1)
+    num_cat_bool, num_cat_message = check_num_cat_lists(numerical, categorical, messages)
+    if num_cat_bool:
+        print(num_cat_message)
+        print('  -> Not producing a figure')
 
     flowcharts, included = apply_criteria(metadata, criteria, numerical, messages)
+    if messages:
+        print('Problems encountered during application of criteria:')
+        for message in messages:
+            print(message)
     included.reset_index().to_csv(o_included, index=False, sep='\t')
 
     excluded = metadata.loc[[x for x in metadata.index if x not in included.index],:].copy()
     excluded.reset_index().to_csv(o_excluded, index=False, sep='\t')
 
-    make_visualizations(included, i_plot_groups, o_visualization,
-                        numerical, categorical, flowcharts)
+    if not num_cat_bool:
+        make_visualizations(included, i_plot_groups, o_visualization,
+                            numerical, categorical, flowcharts)
     if fetch:
         fetch_redbiom(o_included, p_redbiom_context, p_bloom_sequences,
                       p_reads_filter, unique, update, dim, verbose)
