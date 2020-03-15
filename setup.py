@@ -54,7 +54,7 @@ setup(
     install_requires=[
         "click >= 6.7",
         'numpy >= 1.18.1',
-        'pandas >= 0.19.0',
+        'pandas >= 1.0.1',
         'altair >= 3.2.0',
         'cython >= 0.29.15',
         'biom-format >= 2.1.5',
