@@ -53,7 +53,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "click >= 6.7",
-        'numpy >= 1.12.1',
+        'numpy >= 1.18.1',
         'pandas >= 0.19.0',
         'altair >= 3.2.0',
         'cython >= 0.29.15',

@@ -65,6 +65,7 @@ def make_visualizations(included: pd.DataFrame, i_plot_groups: str,
         os.makedirs(o_visualization_dir)
     if not o_visualization.endswith('.html'):
         o_visualization = '%s.html' % o_visualization
+    print('Start making the chart (html) figure')
     make_user_chart(included_num, included_cat, flowcharts, o_visualization)
 
     # o_explorer = '%s_metadataExplorer.html' % splitext(o_visualization)[0]
@@ -135,7 +136,7 @@ def make_user_chart(included_num: pd.DataFrame,
     o_visualization : str
         Path to output visualization for the included samples only.
     """
-
+    print(' - make filtering figure... ', end='')
     flowcharts_pds = []
     for step in ['init', 'filter', 'add']:
         if step in flowcharts:
@@ -161,15 +162,20 @@ def make_user_chart(included_num: pd.DataFrame,
         color='step',
         tooltip=['step', 'filter', 'samples', 'variable', 'values', 'indicator']
     )
+    print('Done')
 
+    print(' - get numeric melted table... ')
     included_num_us = get_included_us(included_num, 'num')
+    print(' - get categorical melted table... ')
     included_cat_us = get_included_us(included_cat, 'cat')
     # merge the numeric and categorical tables
+    print(' - merge numeric and categorical tables... ')
     included_merged = included_num_us.merge(included_cat_us, on='sample_name', how='left')
     included_merged = included_merged.loc[~included_merged.isna().any(axis=1), :]
     # add variable to indicate unique sample/variable/factor instances
     included_merged['is_unique_ID_for_altair_plot'] =  add_unique_per_cat_col(included_merged)
 
+    print(' - make scatter figure... ', end='')
     num_var_x = included_merged['num_var_x'].unique().tolist()
     num_var_y = included_merged['num_var_y'].unique().tolist()
     cont_dropdown_var_x = altair.binding_select(options=num_var_x)
@@ -203,9 +209,12 @@ def make_user_chart(included_num: pd.DataFrame,
     ).resolve_scale(
         color='independent'
     )
+    print('Done')
+
 
     # Make barplot, including:
     # - the bars
+    print(' - make barplots figure...', end='')
     sorted_factors = get_sorted_factors(included_merged)
     bars_sel = altair.Chart(included_merged).mark_bar().encode(
         x=altair.X('cat_val:N', sort=sorted_factors),
@@ -226,13 +235,16 @@ def make_user_chart(included_num: pd.DataFrame,
     meta_bars = (bars_sel + text_sel).transform_filter(
         brush
     )
+    print('Done')
 
+    print(' - Write figure... ', end='')
     # concatenate the three panels
     chart = (curve | scatter_chart | meta_bars)
     chart = chart.resolve_scale(
         color='independent'
     )
     chart.save(o_visualization)
+    print('Done')
 
 
 def read_template_chart() -> dict:
