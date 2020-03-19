@@ -43,10 +43,6 @@ def make_visualizations(included: pd.DataFrame, i_plot_groups: str,
     included_num = get_included_num(included, numerical, 'numerical', plot_groups)
     included_cat = get_included_num(included, categorical, 'categorical', plot_groups)
 
-    print(included_num.iloc[:4,:4])
-    print(included_cat.iloc[:4,:4])
-    print(gfds)
-
     o_visualization_dir = dirname(o_visualization)
     if not isdir(o_visualization_dir):
         os.makedirs(o_visualization_dir)
