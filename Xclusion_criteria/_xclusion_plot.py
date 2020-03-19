@@ -7,10 +7,10 @@
 # ----------------------------------------------------------------------------
 
 import os
-import sys
 import yaml
 import json
 import altair
+import random
 import numpy as np
 import pandas as pd
 import pkg_resources
@@ -38,27 +38,14 @@ def make_visualizations(included: pd.DataFrame, i_plot_groups: str,
     flowcharts : dict
         Steps of the workflow with samples counts (simple representation).
     """
-    included_num = included[numerical].copy()
-    included_cat = included[categorical].copy()
-
     plot_groups = get_parsed_plot_groups(i_plot_groups)
-    if 'categories' not in plot_groups or not plot_groups['categories']:
-        included_cat['number_of_samples'] = 'number_of_samples'
-        included_cat = included_cat[['number_of_samples']]
-    else:
-        plot_groups_cats = list(plot_groups['categories'])
-        cat_to_plot = [x for x in plot_groups_cats if x in set(categorical)]
-        print(cat_to_plot)
-        cat_not_to_plot = [x for x in plot_groups_cats if x not in set(cat_to_plot)]
-        print(cat_not_to_plot)
-        if not cat_to_plot:
-            print(' --> all passed categories are not categorical')
-            included_cat['number_of_samples'] = 'number_of_samples'
-            cat_to_plot = ['number_of_samples']
-        elif cat_not_to_plot:
-            print(' --> %s passed categories that are not categorical:' % len(cat_not_to_plot))
-            print('\t* %s' % '\n\t* '.join(cat_not_to_plot))
-        included_cat = included_cat[cat_to_plot]
+
+    included_num = get_included_num(included, numerical, 'numerical', plot_groups)
+    included_cat = get_included_num(included, categorical, 'categorical', plot_groups)
+
+    print(included_num.iloc[:4,:4])
+    print(included_cat.iloc[:4,:4])
+    print(gfds)
 
     o_visualization_dir = dirname(o_visualization)
     if not isdir(o_visualization_dir):
@@ -70,6 +57,52 @@ def make_visualizations(included: pd.DataFrame, i_plot_groups: str,
 
     # o_explorer = '%s_metadataExplorer.html' % splitext(o_visualization)[0]
     # make_explorer_chart(included.reset_index(), o_explorer, numerical, categorical)
+
+
+def get_included_num(included: pd.DataFrame, num_cat: list,
+                     nc: str, plot_groups: dict) -> pd.DataFrame:
+    """
+    Parameters
+    ----------
+    included : pd.DataFrame
+        Metadata for the included samples only.
+    num_cat : list
+        Metadata variables that are numerical (or categorical).
+    nc : str
+        "numerical" or "categorical"
+    plot_groups : dict
+        Groups (values) for barplots and scatters (keys).
+
+    Returns
+    -------
+    included_nc : pd.DataFrame
+        Metadata for the included samples and the
+        passed numerical (or categorical) variables.
+    """
+    included_nc = included[num_cat].copy()
+    if nc not in plot_groups or not plot_groups[nc]:
+        if nc == 'categorical':
+            included_nc['number_of_samples'] = 'number_of_samples'
+            included_nc = included_nc[['number_of_samples']]
+            cat_to_plot = ['number_of_samples']
+    else:
+        print(num_cat)
+        plot_groups_cats = list(plot_groups[nc])
+        print(plot_groups_cats[:3])
+        cat_to_plot = [x for x in plot_groups_cats if x in set(num_cat)]
+        print(cat_to_plot[:3])
+        cat_not_to_plot = [x for x in plot_groups_cats if x not in set(cat_to_plot)]
+        print(cat_not_to_plot[:3])
+        if not cat_to_plot:
+            print(' --> all passed "%s" variables are not %s' % (nc, nc))
+            if nc == 'categorical':
+                included_nc['number_of_samples'] = 'number_of_samples'
+                cat_to_plot = ['number_of_samples']
+        elif cat_not_to_plot:
+            print(' --> %s passed "%s" that are not %s:' % (len(cat_not_to_plot), nc, nc))
+            print('\t* %s' % '\n\t* '.join(cat_not_to_plot))
+        included_nc = included_nc[cat_to_plot]
+    return included_nc
 
 
 def add_unique_per_cat_col(included_merged: pd.DataFrame) -> list:
@@ -169,82 +202,99 @@ def make_user_chart(included_num: pd.DataFrame,
     print(' - get categorical melted table... ')
     included_cat_us = get_included_us(included_cat, 'cat')
     # merge the numeric and categorical tables
-    print(' - merge numeric and categorical tables... ')
-    included_merged = included_num_us.merge(included_cat_us, on='sample_name', how='left')
-    included_merged = included_merged.loc[~included_merged.isna().any(axis=1), :]
-    # add variable to indicate unique sample/variable/factor instances
-    included_merged['is_unique_ID_for_altair_plot'] =  add_unique_per_cat_col(included_merged)
 
-    print(' - make scatter figure... ', end='')
-    num_var_x = included_merged['num_var_x'].unique().tolist()
-    num_var_y = included_merged['num_var_y'].unique().tolist()
-    cont_dropdown_var_x = altair.binding_select(options=num_var_x)
-    cont_dropdown_var_y = altair.binding_select(options=num_var_y)
-    cont_select_var_x = altair.selection_single(fields=['num_var_x'],
-                                                bind=cont_dropdown_var_x,
-                                                init={'num_var_x': num_var_x[0]},
-                                                name="num_var_x", clear=False)
-    cont_select_var_y = altair.selection_single(fields=['num_var_y'],
-                                                bind=cont_dropdown_var_y,
-                                                init={'num_var_y': num_var_y[0]},
-                                                name="num_var_y", clear=False)
-    brush = altair.selection(type='interval', resolve='global')
+    all_samples = included_num_us.sample_name.unique()
+    if all_samples.size > 100:
+        print('More tha 100 samples -> samples will be used:')
+        random_samples = [random.sample(all_samples.tolist(), 10) for r in range(3)]
+        suffixes = ['rand100_0', 'rand100_1', 'rand100_2']
+    else:
+        random_samples = [all_samples.tolist()]
+        suffixes = ['']
 
-    # Scatter figure (left panel)
-    scatter_chart = altair.Chart(
-        included_merged, width=400, height=400, title='Numeric variables values per sample'
-    ).mark_point(
-        filled=True
-    ).encode(
-        x=altair.X('num_val_x:Q', scale=altair.Scale(zero=False)),
-        y=altair.Y('num_val_y:Q', scale=altair.Scale(zero=False)),
-        color=altair.condition(brush, 'num_val_y:Q', altair.ColorValue('gray')),
-        tooltip="sample_name:N"
-    ).add_selection(
-        brush, cont_select_var_x, cont_select_var_y,
-    ).transform_filter(
-        cont_select_var_x
-    ).transform_filter(
-        cont_select_var_y
-    ).resolve_scale(
-        color='independent'
-    )
-    print('Done')
+    for sdx, suffix in enumerate(suffixes):
+        random_sample = random_samples[sdx]
+        cur_included_num_us = included_num_us.loc[included_num_us.sample_name.isin(random_sample)]
+        cur_included_cat_us = included_cat_us.loc[included_cat_us.sample_name.isin(random_sample)]
+        print(' - merge numeric and categorical tables... ')
+        included_merged = cur_included_num_us.merge(cur_included_cat_us, on='sample_name', how='left')
+        included_merged = included_merged.loc[~included_merged.isna().any(axis=1), :]
+        # add variable to indicate unique sample/variable/factor instances
+        included_merged['is_unique_ID_for_altair_plot'] =  add_unique_per_cat_col(included_merged)
+        print(included_merged.shape)
 
+        print(' - make scatter figure... ', end='')
+        num_var_x = included_merged['num_var_x'].unique().tolist()
+        num_var_y = included_merged['num_var_y'].unique().tolist()
+        cont_dropdown_var_x = altair.binding_select(options=num_var_x)
+        cont_dropdown_var_y = altair.binding_select(options=num_var_y)
+        cont_select_var_x = altair.selection_single(
+            fields=['num_var_x'], bind=cont_dropdown_var_x,
+            init={'num_var_x': num_var_x[0]}, name="num_var_x", clear=False)
+        cont_select_var_y = altair.selection_single(
+            fields=['num_var_y'], bind=cont_dropdown_var_y,
+            init={'num_var_y': num_var_y[0]}, name="num_var_y", clear=False)
+        brush = altair.selection(type='interval', resolve='global')
 
-    # Make barplot, including:
-    # - the bars
-    print(' - make barplots figure...', end='')
-    sorted_factors = get_sorted_factors(included_merged)
-    bars_sel = altair.Chart(included_merged).mark_bar().encode(
-        x=altair.X('cat_val:N', sort=sorted_factors),
-        y='count(cat_val):Q',
-        color='cat_var:N'
-    ).properties(
-        width=600, height=200, title='Number of samples per categorical variable'
-    ).transform_filter(
-        {'not': altair.FieldEqualPredicate(field='is_unique_ID_for_altair_plot', equal='ID')}
-    )
-    # - the text on the bars
-    text_sel = bars_sel.mark_text(
-        align='center', baseline='middle', yOffset=-10
-    ).encode(
-        text='count(cat_val):Q'
-    )
-    # merge bars and text
-    meta_bars = (bars_sel + text_sel).transform_filter(
-        brush
-    )
-    print('Done')
+        # Scatter figure (left panel)
+        scatter_chart = altair.Chart(
+            included_merged, width=400, height=400, title='Numeric variables values per sample'
+        ).mark_point(
+            filled=True
+        ).encode(
+            x=altair.X('num_val_x:Q', scale=altair.Scale(zero=False)),
+            y=altair.Y('num_val_y:Q', scale=altair.Scale(zero=False)),
+            color=altair.condition(brush, 'num_val_y:Q', altair.ColorValue('gray')),
+            tooltip="sample_name:N"
+        ).add_selection(
+            brush, cont_select_var_x, cont_select_var_y,
+        ).transform_filter(
+            cont_select_var_x
+        ).transform_filter(
+            cont_select_var_y
+        ).resolve_scale(
+            color='independent'
+        )
+        print('Done')
 
-    print(' - Write figure... ', end='')
-    # concatenate the three panels
-    chart = (curve | scatter_chart | meta_bars)
-    chart = chart.resolve_scale(
-        color='independent'
-    )
-    chart.save(o_visualization)
-    print('Done')
+        # Make barplot, including:
+        # - the bars
+        print(' - make barplots figure...', end='')
+        sorted_factors = get_sorted_factors(included_merged)
+        bars_sel = altair.Chart(included_merged).mark_bar().encode(
+            x=altair.X('cat_val:N', sort=sorted_factors),
+            y='count(cat_val):Q',
+            color='cat_var:N'
+        ).properties(
+            width=600, height=200, title='Number of samples per categorical variable'
+        ).transform_filter(
+            {'not': altair.FieldEqualPredicate(field='is_unique_ID_for_altair_plot', equal='ID')}
+        )
+        # - the text on the bars
+        text_sel = bars_sel.mark_text(
+            align='center', baseline='middle', yOffset=-10
+        ).encode(
+            text='count(cat_val):Q'
+        )
+        # merge bars and text
+        meta_bars = (bars_sel + text_sel).transform_filter(
+            brush
+        )
+        print('Done')
+
+        print(' - Write figure... ', end='')
+        # concatenate the three panels
+        chart = (curve | scatter_chart | meta_bars)
+        chart = chart.resolve_scale(
+            color='independent'
+        )
+        o_visualization = '%s%s%s' % (
+            splitext(o_visualization)[0],
+            suffixes[sdx],
+            splitext(o_visualization)[1]
+        )
+        chart.save(o_visualization)
+        print('Done')
 
 
 def read_template_chart() -> dict:

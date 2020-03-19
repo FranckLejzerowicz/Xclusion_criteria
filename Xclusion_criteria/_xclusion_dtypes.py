@@ -184,13 +184,14 @@ def split_variables_types(dtypes: dict, criteria: dict,
     categorical : list
         Metadata variables that are categorical.
     """
-    all_criteria_variables = set(
-        [y[0] for x in ['init', 'add', 'filter'] for y in criteria[x].keys() if x in criteria]
-    )
+    # all_criteria_variables = set(
+    #     [y[0] for x in ['init', 'add', 'filter'] for y in criteria[x].keys() if x in criteria]
+    # )
     for var, dtype in dtypes.items():
         if str(dtype) == 'object':
             categorical.append(var)
-        elif str(dtype) in ['int', 'float']:
+        else:
+        # elif str(dtype) in ['int', 'float']:
             numerical.append(var)
 
 

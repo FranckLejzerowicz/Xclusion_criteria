@@ -1,4 +1,60 @@
-categories:
+numerical:
+  - vioscreen_micromacro__3_Methylhistidine_in_mg
+  - vioscreen_micromacro__Acesulfame_Potassium_in_mg
+  - vioscreen_micromacro__Added_Sugars__by_Available_Carbohydrate__in_g
+  - vioscreen_micromacro__Added_Sugars__by_Total_Sugars__in_g
+  - vioscreen_micromacro__Alanine_in_g
+  - vioscreen_micromacro__Alcohol_in_g
+  - vioscreen_micromacro__Alpha_Carotene__provitamin_A_carotenoid__in_mcg
+  - vioscreen_micromacro__Alpha_Tocopherol_in_mg
+  - vioscreen_micromacro__Animal_Protein_in_g
+  - vioscreen_micromacro__Arginine_in_g
+  - vioscreen_micromacro__Ash_in_g
+  - vioscreen_micromacro__Aspartame_in_mg
+  - vioscreen_micromacro__Aspartic_Acid_in_g
+  - vioscreen_micromacro__Available_Carbohydrate_in_g
+  - vioscreen_micromacro__Beta_Carotene__provitamin_A_carotenoid__in_mcg
+  - vioscreen_micromacro__Beta_Cryptoxanthin__provitamin_A_carotenoid__in_mcg
+  - vioscreen_micromacro__Beta_Tocopherol_in_mg
+  - vioscreen_micromacro__Betaine_in_mg
+  - vioscreen_micromacro__Biochanin_A_in_mg
+  - vioscreen_micromacro__CLA_cis_9__trans_11_in_g
+  - vioscreen_micromacro__CLA_trans_10__cis_12_in_g
+  - vioscreen_micromacro__Caffeine_in_mg
+  - vioscreen_micromacro__Calcium_in_mg
+  - vioscreen_micromacro__Cholesterol_in_mg
+  - vioscreen_micromacro__Choline_in_g
+  - vioscreen_micromacro__Copper_in_mg
+  - vioscreen_micromacro__Coumestrol_in_mg
+  - vioscreen_micromacro__Cystine_in_g
+  - vioscreen_micromacro__Daidzein_in_mg
+  - vioscreen_micromacro__Delta_Tocopherol_in_mg
+  - vioscreen_micromacro__Dietary_Folate_Equivalents_in_mcg
+  - vioscreen_micromacro__Energy_in_kcal
+  - vioscreen_micromacro__Energy_in_kj
+  - vioscreen_micromacro__Erythritol_in_g
+  - vioscreen_micromacro__Formononetin_in_mg
+  - vioscreen_micromacro__Fructose_in_g
+  - vioscreen_micromacro__Galactose_in_g
+  - vioscreen_micromacro__Gamma_Tocopherol_in_mg
+  - vioscreen_micromacro__Genistein_in_mg
+  - vioscreen_micromacro__Glucose_in_g
+  - vioscreen_micromacro__Glutamic_Acid_in_g
+  - vioscreen_micromacro__Glycine_in_g
+  - vioscreen_micromacro__Glycitein_in_mg
+  - vioscreen_micromacro__Histidine_in_g
+  - vioscreen_micromacro__Inositol_in_g
+  - vioscreen_micromacro__Insoluble_Dietary_Fiber_in_g
+  - vioscreen_micromacro__Iron_in_mg
+  - vioscreen_micromacro__Isoleucine_in_g
+  - vioscreen_micromacro__Isomalt_in_g
+  - vioscreen_micromacro__Lactitol_in_g
+  - vioscreen_micromacro__Lactose_in_g
+  - vioscreen_micromacro__Leucine_in_g
+  - vioscreen_micromacro__Lutein_+_Zeaxanthin_in_mcg
+  - vioscreen_micromacro__Lycopene_in_mcg
+  - vioscreen_micromacro__Lysine_in_g
+categorical:
   - bmi_cat
   - age_years
   - types_of_plants

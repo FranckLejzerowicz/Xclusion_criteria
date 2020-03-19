@@ -72,7 +72,7 @@ def xclusion_criteria(
 
     metadata = read_meta_pd(m_metadata_file)
 
-    messages, numerical, categorical = [], [], []
+    messages = []
     criteria = get_criteria(i_criteria, metadata, nulls, messages)
     if not criteria:
         print('No single criteria found: check input path / content\nExiting')
@@ -80,10 +80,11 @@ def xclusion_criteria(
     if messages:
         print('Problems encountered during criteria parsing:')
         for message in messages:
-            print('; '.join(message))
+            print(message)
         messages = []
 
     dtypes = get_dtypes(metadata, nulls)
+    numerical, categorical = [], []
     split_variables_types(dtypes, criteria, numerical, categorical)
     num_cat_bool, num_cat_message = check_num_cat_lists(numerical, categorical)
     if num_cat_bool:
