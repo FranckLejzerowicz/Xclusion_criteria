@@ -15,13 +15,6 @@ scrutinizing categories that might be of interest for a future study
 
 ## Installation
 
-#### Dependencies
-
-
-`numpy >= 1.18.1`, `pandas >= 1.0.1`, `cython >= 0.29.15`
-
-#### Install
-
 ```
 git clone https://github.com/FranckLejzerowicz/Xclusion_criteria.git
 cd Xclusion_criteria
