@@ -1,3 +1,4 @@
-antibiotic_history:
-  - "I have not taken antibiotics in the past year."
-  - "Year"
+init:
+  antibiotic_history:
+    - "I have not taken antibiotics in the past year."
+    - "Year"

@@ -1,3 +1,4 @@
-col2,2:
-  - None
-  - 2
+init:
+  col2,2:
+    - None
+    - 2

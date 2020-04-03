@@ -1,0 +1,20 @@
+init:
+  antibiotic_history,1:
+    - "I have not taken antibiotics in the past year."
+    - "Year"
+  ibd,1:
+    - "I do not have this condition"
+  age_cat,0:
+    - NULLS
+    - "70+"
+    - "child"
+    - "teen"
+    - "baby"
+add:
+  alcohol_consumption,1:
+    - 'No'
+filter:
+  alcohol_types_red_wine,1:
+    - 'Yes'
+no_nan:
+  - bmi

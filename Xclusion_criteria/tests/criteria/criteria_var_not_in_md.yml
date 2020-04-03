@@ -1,2 +1,3 @@
-not_in_md,1:
-  - "too"
+init:
+  not_in_md,1:
+    - "too"

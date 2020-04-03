@@ -44,11 +44,15 @@ class TestCrits(unittest.TestCase):
         check_in_md(
             ['var_1', 'var_2', 'var_3'],
             ['var_1', 'var_2'],
-            self.criteria, self.messages,
-            ['missing', 'not applicable'])
-        criteria = {
-            ('var_1', '0'): ['missing', 'not applicable'],
-            ('var_2', '0'): ['missing', 'not applicable'],
+            self.criteria,
+            self.messages,
+            ['missing', 'not applicable'],
+            'init'
+        )
+        criteria = {'init': {
+                ('var_1', '0'): ['missing', 'not applicable'],
+                ('var_2', '0'): ['missing', 'not applicable']
+            }
         }
         messages = ['Variable var_3 not in metadata (skipped)']
         self.assertEqual(self.criteria, criteria)
@@ -56,15 +60,20 @@ class TestCrits(unittest.TestCase):
 
     def test_check_factors(self):
         test_message = []
-        test_boolean, test_values = check_factors('col', ['f1', 'f2', 'f3'], pd.DataFrame({'col': ['f1', 'f2']}), test_message)
+        test_boolean, test_values = check_factors('col', '2', ['what', 'ever'], self.nulls, pd.DataFrame({'col': ['anything', 'else']}), test_message)
         self.assertEqual(test_boolean, False)
-        self.assertEqual(test_values, ['f1', 'f2'])
-        self.assertEqual(test_message, ['[Warning] Subset values for variable col for not in table\n - f3'])
+        self.assertEqual(test_values, ['what', 'ever'])
+        self.assertEqual(test_message, [])
         test_message = []
-        test_boolean, test_values = check_factors('col', ['f4', 'f5'], pd.DataFrame({'col': ['f1', 'f2']}), test_message)
+        test_boolean, test_values = check_factors('col', '1', ['f4', 'f5'], self.nulls, pd.DataFrame({'col': ['f1', 'f2']}), test_message)
         self.assertEqual(test_boolean, True)
         self.assertEqual(test_values, [])
-        self.assertEqual(test_message, ['Subset values for variable col for not in table (skipped)'])
+        self.assertEqual(test_message, ['Subset values for variable col not in table (skipped)'])
+        test_message = []
+        test_boolean, test_values = check_factors('col', '1', ['f1', 'f2', 'f3'], self.nulls, pd.DataFrame({'col': ['f1', 'f2']}), test_message)
+        self.assertEqual(test_boolean, False)
+        self.assertEqual(test_values, ['f1', 'f2'])
+        self.assertEqual(test_message, ['[Warning] Subset values for variable col not in table\n - f3'])
 
     def test_check_index(self):
         test_boolean = check_index('0', ['f1', 'f2', 'f3'], [])
@@ -123,19 +132,19 @@ class TestCrits(unittest.TestCase):
         test_messages = []
         test_criteria = {}
         check_in_md(['col1', 'col2'], ['col1', 'col2', 'col3'],
-                    test_criteria, test_messages, ['missing'])
+                    test_criteria, test_messages, ['missing'], 'init')
         self.assertEqual(test_messages, [])
         self.assertEqual(test_criteria, {('col1', '0'): ['missing'], ('col2', '0'): ['missing']})
         test_messages = []
         test_criteria = {}
         check_in_md(['col1', 'col2'], ['col2', 'col3'],
-                    test_criteria, test_messages, ['missing'])
+                    test_criteria, test_messages, ['missing'], 'init')
         self.assertEqual(test_messages, ['Variable col1 not in metadata (skipped)'])
         self.assertEqual(test_criteria, {('col1', '0'): ['missing']})
         test_messages = []
         test_criteria = {}
         check_in_md(['col1', 'col2'], ['col3'],
-                    test_criteria, test_messages, ['missing'])
+                    test_criteria, test_messages, ['missing'], 'init')
         self.assertEqual(test_messages, ['Variable col1 not in metadata (skipped)',
                                          'Variable col2 not in metadata (skipped)'])
         self.assertEqual(test_criteria, {})
@@ -157,58 +166,42 @@ class TestCrits(unittest.TestCase):
     def test_get_criteria(self):
 
         no_comma = '%s/criteria/criteria_no_comma.yml' % ROOT
-        test_criteria, test_messages = get_criteria(None, no_comma, self.md, self.nulls)
+        test_messages = []
+        test_criteria = get_criteria(no_comma, self.md, self.nulls, test_messages)
         self.assertEqual(test_criteria, {})
         self.assertEqual(test_messages, ['Must have a metadata variable and a numeric separated by a comma (",")'])
 
         no_correct_index = '%s/criteria/criteria_no_correct_index.yml' % ROOT
-        test_criteria, test_messages = get_criteria(None, no_correct_index, self.md, self.nulls)
+        test_messages = []
+        test_criteria = get_criteria(no_correct_index, self.md, self.nulls, test_messages)
         self.assertEqual(test_criteria, {})
         self.assertEqual(test_messages, ['Numeric indicator not "0", "1" or "2" (9) (antibiotic_history skipped)'])
 
         no_index = '%s/criteria/criteria_no_index.yml' % ROOT
-        test_criteria, test_messages = get_criteria(None, no_index, self.md, self.nulls)
+        test_messages = []
+        test_criteria = get_criteria(no_index, self.md, self.nulls, test_messages)
         self.assertEqual(test_criteria, {})
         self.assertEqual(test_messages, ['Must have a metadata variable and a numeric separated by a comma (",")'])
 
         var_not_in_md = '%s/criteria/criteria_var_not_in_md.yml' % ROOT
-        test_criteria, test_messages = get_criteria(None, var_not_in_md, self.md, self.nulls)
+        test_messages = []
+        test_criteria = get_criteria(var_not_in_md, self.md, self.nulls, test_messages)
         self.assertEqual(test_criteria, {})
         self.assertEqual(test_messages, ['Variable not_in_md not in metadata (skipped)'])
 
         is_not_list = '%s/criteria/criteria_is_not_list.yml' % ROOT
-        test_criteria, test_messages = get_criteria(None, is_not_list, self.md, self.nulls)
+        test_messages = []
+        test_criteria = get_criteria(is_not_list, self.md, self.nulls, test_messages)
         self.assertEqual(test_criteria, {})
         self.assertEqual(test_messages, ['Values to subset for must be in a list format (antibiotic_history skipped)'])
 
         wrong_minmax = '%s/criteria/criteria_wrong_minmax.yml' % ROOT
-        test_criteria, test_messages = get_criteria(None, wrong_minmax, self.md, self.nulls)
+        test_messages = []
+        test_criteria = get_criteria(wrong_minmax, self.md, self.nulls, test_messages)
         self.assertEqual(test_criteria, {})
         self.assertEqual(
             test_messages,
             ['For min-max subsetting, two-items list need: no min (or no max) should be "None"'])
-
-        test_criteria, test_messages = get_criteria((('antibiotic_history', '0', 'Yes/No'),),
-                                                    None, self.md, self.nulls)
-        self.assertEqual(test_criteria, {('antibiotic_history', '0'): ['No', 'Yes']})
-        self.assertEqual(test_messages, [])
-
-        test_criteria, test_messages = get_criteria((('antibiotic_history', '3', 'Yes/No'),),
-                                                    None, self.md, self.nulls)
-        self.assertEqual(test_criteria, {})
-        self.assertEqual(test_messages, ['Numeric indicator not "0", "1" or "2" (3) (antibiotic_history skipped)'])
-
-        test_criteria, test_messages = get_criteria((('not_a_var', '1', 'Yes/No'),),
-                                                    None, self.md, self.nulls)
-        self.assertEqual(test_criteria, {})
-        self.assertEqual(test_messages, ['Variable not_a_var not in metadata (skipped)'])
-
-        test_criteria, test_messages = get_criteria((('antibiotic_history', '1', 'Yes/No/New'),),
-                                                    None, self.md, self.nulls)
-        self.assertEqual(
-            test_messages,
-            ['[Warning] Subset values for variable antibiotic_history for not in table\n - New'])
-        self.assertEqual(test_criteria, {('antibiotic_history', '1'): ['No', 'Yes']})
 
     def test_do_filtering(self):
 
@@ -237,7 +230,7 @@ class TestCrits(unittest.TestCase):
         assert_frame_equal(md_abx_filt_n, test_md_abx_x)
 
         md_abx_filt_mm = pd.DataFrame({'antibiotic_history': ['Yes', 'No'], 'col2': [1., 2.], 'col3': ['1.3', '1']})
-        test_name, test_boolean, test_md_abx_mm = do_filtering(self.md, 'col2', '2', [None, 3], ['col2'], [])
+        test_name, test_boolean, test_md_abx_mm = do_filtering(self.md, 'col2', '2', ['None', 3], ['col2'], [])
         # weirdly, if the two col3 contents are "object" and identical, the test fails, hence:
         md_abx_filt_mm.col3 = md_abx_filt_mm.col3.astype('float')
         test_md_abx_mm.col3 = test_md_abx_mm.col3.astype('float')
@@ -259,13 +252,13 @@ class TestCrits(unittest.TestCase):
         assert_frame_equal(md_abx_filt_mm, test_md_abx_mm)
 
         test_messages = []
-        test_name, test_boolean, output_md = do_filtering(self.md, 'col2', '2', [None, 3], ['col3'], test_messages)
+        test_name, test_boolean, output_md = do_filtering(self.md, 'col2', '2', ['None', 3], ['col3'], test_messages)
         self.assertEqual(test_name, '')
         self.assertEqual(test_boolean, True)
         self.assertEqual(test_messages, ['Metadata variable col2 is not numerical (skipping)'])
 
         test_messages = []
-        test_name, test_boolean, output_md = do_filtering(self.md, 'col2', '2', [None, None], ['col2'], test_messages)
+        test_name, test_boolean, output_md = do_filtering(self.md, 'col2', '2', ['None', 'None'], ['col2'], test_messages)
         self.assertEqual(test_name, '')
         self.assertEqual(test_boolean, True)
         self.assertEqual(test_messages, ['[Warning] Both numerical bounds for col2 are "None" (skipping)'])

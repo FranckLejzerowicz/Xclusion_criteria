@@ -1,3 +1,4 @@
-antibiotic_history,9:
-  - "I have not taken antibiotics in the past year."
-  - "Year"
+filter:
+  antibiotic_history,9:
+    - "I have not taken antibiotics in the past year."
+    - "Year"

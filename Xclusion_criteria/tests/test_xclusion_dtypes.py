@@ -25,9 +25,15 @@ class TestDtypes(unittest.TestCase):
     def setUp(self):
 
         self.dtypes = {
-            'num': 'int', 'float': 'float', 'num_nan': 'int',
-            'num_str_ok': 'int', 'num_str_notok': 'int',
-            'cat_1': 'object', 'cat_nan': 'object', 'cat_str_ok': 'object'}
+            'num': 'int',
+            'float': 'float',
+            'num_nan': 'int',
+            'num_str_ok': 'int',
+            'num_str_notok': 'int',
+            'cat_1': 'object',
+            'cat_nan': 'object',
+            'cat_str_ok': 'object'
+        }
         self.criteria = {
             ('cat_1', '0'): ['f1', 'f2', 'f3'], ('cat_nan', '1'): ['f1', 'f2']}
 
@@ -69,9 +75,10 @@ class TestDtypes(unittest.TestCase):
         }
 
     def test_split_variables_types(self):
-        num, cat = split_variables_types(self.dtypes)
+        num, cat = [], []
+        split_variables_types(self.dtypes, num, cat)
         self.assertEqual(sorted(num), sorted(['num','float','num_nan', 'num_str_ok','num_str_notok']))
-        self.assertEqual(sorted(cat), sorted(['cat_1','cat_nan']))
+        self.assertEqual(sorted(cat), sorted(['cat_1','cat_nan', 'cat_str_ok']))
 
     def test_get_dtypes_init(self):
         test_dtypes_init = {
@@ -133,25 +140,21 @@ class TestDtypes(unittest.TestCase):
 
     def test_check_num_cat_lists(self):
 
-        test_message = []
-        boolean = check_num_cat_lists([], ['1'], test_message)
+        boolean, test_message = check_num_cat_lists([], ['1'])
         self.assertEqual(boolean, True)
-        self.assertEqual(test_message, ['Not enough numerical variables in the metadata (0)'])
+        self.assertEqual(test_message, 'Not enough numerical variables in the metadata (0)')
 
-        test_message = []
-        boolean = check_num_cat_lists(['1'], ['1'], test_message)
+        boolean, test_message = check_num_cat_lists(['1'], ['1'])
         self.assertEqual(boolean, True)
-        self.assertEqual(test_message, ['Not enough numerical variables in the metadata (1)'])
+        self.assertEqual(test_message, 'Not enough numerical variables in the metadata (1)')
 
-        test_message = []
-        boolean = check_num_cat_lists(['1', '2'], [], test_message)
+        boolean, test_message = check_num_cat_lists(['1', '2'], [])
         self.assertEqual(boolean, True)
-        self.assertEqual(test_message, ['Not enough categorical variables in the metadata (0)'])
+        self.assertEqual(test_message, 'Not enough categorical variables in the metadata (0)')
 
-        test_message = []
-        boolean = check_num_cat_lists(['1', '2'], ['1'], test_message)
+        boolean, test_message = check_num_cat_lists(['1', '2'], ['1'])
         self.assertEqual(boolean, False)
-        self.assertEqual(test_message, [])
+        self.assertEqual(test_message, '')
 
 
 if __name__ == '__main__':
