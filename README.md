@@ -10,18 +10,10 @@ subsetting of metadata file for non-expert users can be a challenge.
 This tools allows to apply a series of inclusion/exclusion criteria 
 in a given order and allows retrieving both the included and excluded 
 sample selection along with user-defined visualization hat allows 
-scrutinizing categories that miught be of interest for a future study 
+scrutinizing categories that might be of interest for a future study 
 (e.g. to make sure that particular study groups are balanced.)
 
-Optionally, the tool can also fetch from Qiita the 16S data for the 
-samples left in the selection and apply basic filters on it (for this, the 
-thrid-party tool [Xrbfetch](https://github.com/FranckLejzerowicz/Xrbfetch)
-must be installed).
-
-
-
 ## Installation
-
 
 #### Dependencies
 
@@ -35,13 +27,8 @@ git clone https://github.com/FranckLejzerowicz/Xclusion_criteria.git
 cd Xclusion_criteria
 pip install -e .
 ```
+
 *_Note that python and pip should be python3_
-
-#### Third-party tool
-
-If you want to make use of the functionality allowing fetching 16S data from Qiita,
-please install [Xrbfetch](https://github.com/FranckLejzerowicz/Xrbfetch)
-
 
 ## Input
 
@@ -137,7 +124,7 @@ the sample IDs column will be renamed `sample_name`).
 
 - _option_ `-in`: Metadata table reduced to the samples satisfying all the inclusion criteria (the **selecion**).
 - _option_ `-ex`: Metadata table reduced to the samples not satisfying a least one inclusion criteria.
-- _option_ `-viz`: Interactive visualization composed of three panels (see below).
+- _option_ `-o`: Interactive visualization composed of three panels (see below).
 
 ## Example
 
@@ -145,27 +132,15 @@ This command:
 ```
  Xclusion_criteria \
     -m Xclusion_criteria/tests/metadata/md.tsv \
-    -y Xclusion_criteria/examples/criteria.yml \
-    -z Xclusion_criteria/examples/plot.yml \
+    -c Xclusion_criteria/examples/criteria.yml \
+    -p Xclusion_criteria/examples/plot.yml \
     -in Xclusion_criteria/tests/output/md_out.tsv \
-    -viz Xclusion_criteria/tests/output/md_viz.html
+    -o Xclusion_criteria/tests/output/md_viz.html
 ```
-With return this text on your screen:
-```
-[Warning] Subset values for variable age_cat for not in table
- - teen
- - baby
-        Input_metadata_99 -> antibiotic_history_80
-        antibiotic_history_80 -> ibd_75
-        ibd_75 -> No_age_cat_69
-        No_age_cat_69 -> No_bmi_57
-```
-This tells you about the encountered issues. For our example, there are two inclusion/exclusion criteria factors 
-that are not present in the metadata, and therefore that are not accounted for into the filtering/selection process.
 
 #### Interactive visualization
 
-the `-viz` html output has 3 panels:
+the `-o` html output has 3 panels:
 1. Samples selection progression at each inclusion/exclusion criteria step is reported.
 ![Selection](./Xclusion_criteria/resources/images/selection_popup.png)
 _(interaction: hovering on the steps/dots with the mouse shows
@@ -185,41 +160,27 @@ the variable and variable's factors used for selection)_
 Usage: Xclusion_criteria [OPTIONS]
 
 Options:
-  -m, --m-metadata-file TEXT    Metadata file on which to apply
-                                included/exclusion criteria.  [required]
-  -c, --i-criteria TEXT         Must be a yaml file (see README or
-                                'examples/criteria.yml').  [required]
-  -p, --i-plot-groups TEXT      Must be a yaml file (see README or
-                                'examples/criteria.yml').
-  -in, --o-included TEXT        Output metadata for the included samples only.
-                                [required]
-  -ex, --o-excluded TEXT        Output metadata for the excluded samples only.
-  -viz, --o-visualization TEXT  Output metadata explorer for the included
-                                samples only.  [required]
-  --fetch / --no-fetch          Get the 16S data from RedBiom and apply
-                                microbiome filters.  [default: False]
-  -r, --p-redbiom-context TEXT  [if --fetch] Redbiom context for fetching 16S
-                                data from Qiita.  [default: Deblur-
-                                Illumina-16S-V4-150nt-780653]
-  -b, --p-bloom-sequences TEXT  [if --fetch] Fasta file containing the
-                                sequences known to bloom in fecal samples
-                                (defaults to 'newblooms.all.fasta' file from
-                                package's folder 'resources').
-  -f, --p-reads-filter INTEGER  [if --fetch] Minimum number of reads per
-                                sample.  [default: 1500]
-  --unique / --no-unique        [if --fetch] Keep a unique sample per host
-                                (most read, or most features).  [default:
-                                True]
-  --update / --no-update        [if --fetch] Update the sample names to remove
-                                Qiita-prep info.  [default: True]
-  --dim / --no-dim              [if --fetch] Add the number of samples in the
-                                final biom file name before extension (e.g.
-                                for '-b out.biom' it becomes
-                                'out_1000s.biom').  [default: True]
-  --verbose / --no-verbose      [if --fetch] Show missing, non-fetched samples
-                                and duplicates.  [default: True]
-  --version                     Show the version and exit.
-  --help                        Show this message and exit.
+  -m, --m-metadata-file TEXT  Metadata file on which to apply
+                              included/exclusion criteria.  [required]
+
+  -c, --i-criteria TEXT       Must be a yaml file (see README or
+                              'examples/criteria.yml').  [required]
+
+  -p, --i-plot-groups TEXT    Must be a yaml file (see README or
+                              'examples/criteria.yml').
+
+  -in, --o-included TEXT      Output metadata for the included samples only.
+                              [required]
+
+  -ex, --o-excluded TEXT      Output metadata for the excluded samples only.
+  -o, --o-visualization TEXT  Output metadata explorer for the included
+                              samples only.  [required]
+
+  --random / --no-random      Reduce visualization to 100 random samples.
+                              [default: True]
+
+  --version                   Show the version and exit.
+  --help                      Show this message and exit.
 ```
 
 
