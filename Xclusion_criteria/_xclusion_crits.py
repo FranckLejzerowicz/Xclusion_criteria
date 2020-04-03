@@ -12,7 +12,9 @@ from Xclusion_criteria._xclusion_io import read_i_criteria
 
 def check_factors(var: str, index: str, values: list, nulls: list,
                   metadata: pd.DataFrame, messages: list) -> tuple:
-    """
+    """Checks that subset values for the
+    current variable are in metadata.
+
     Parameters
     ----------
     var : str
@@ -35,6 +37,7 @@ def check_factors(var: str, index: str, values: list, nulls: list,
     common_vars_list : list
         Variable present in both the passed values and
         the metadata factors for the current variable.
+
     """
     boolean = False
     if index == '2':
@@ -44,11 +47,11 @@ def check_factors(var: str, index: str, values: list, nulls: list,
         md_factors = set(metadata[var])
         common_vars = values_set & md_factors
         if not len(common_vars):
-            messages.append('Subset values for variable %s for not in table (skipped)' % var)
+            messages.append('Subset values for variable %s not in table (skipped)' % var)
             boolean = True
         elif len(values_set) > len(common_vars):
             values_out = list(values_set ^ common_vars)
-            messages.append('[Warning] Subset values for variable %s for not in table\n'
+            messages.append('[Warning] Subset values for variable %s not in table\n'
                             ' - %s' % (var, '\n - '.join(values_out)))
         common_vars_list = sorted(common_vars)
         if 'NULLS' in values:
@@ -57,7 +60,8 @@ def check_factors(var: str, index: str, values: list, nulls: list,
 
 
 def check_index(index: str, values: list, messages: list) -> bool:
-    """
+    """Checks that min-max values are a two-items list.
+
     Parameters
     ----------
     index : str
@@ -71,6 +75,7 @@ def check_index(index: str, values: list, messages: list) -> bool:
     -------
     boolean : bool
         Whether to keep the key/value or not.
+
     """
     boolean = False
     if index == '2' and len(values) != 2:
@@ -80,7 +85,8 @@ def check_index(index: str, values: list, messages: list) -> bool:
 
 
 def check_islist(var: str, values, messages: list) -> bool:
-    """
+    """Checks that subsetting values are in a list.
+
     Parameters
     ----------
     var : str
@@ -94,6 +100,7 @@ def check_islist(var: str, values, messages: list) -> bool:
     -------
     boolean : bool
         Whether to keep the key/value or not.
+
     """
     boolean = False
     if not isinstance(values, list):
@@ -103,7 +110,9 @@ def check_islist(var: str, values, messages: list) -> bool:
 
 
 def check_numeric_indicator(var: str, index: str, messages: list) -> bool:
-    """
+    """Checks that variable's numeric
+    indicator is "0", "1" or "2".
+
     Parameters
     ----------
     var : str
@@ -117,6 +126,7 @@ def check_numeric_indicator(var: str, index: str, messages: list) -> bool:
     -------
     boolean : bool
         Whether to keep the key/value or not.
+
     """
     boolean = False
     if index not in ['0', '1', '2']:
@@ -126,7 +136,8 @@ def check_numeric_indicator(var: str, index: str, messages: list) -> bool:
 
 
 def check_var_in_md(var: str, columns: list, messages: list) -> bool:
-    """
+    """Checks that variable is in the metadata.
+
     Parameters
     ----------
     var : str
@@ -140,6 +151,7 @@ def check_var_in_md(var: str, columns: list, messages: list) -> bool:
     -------
     boolean : bool
         Whether to keep the key/value or not.
+
     """
     boolean = False
     if var not in columns:
@@ -150,7 +162,8 @@ def check_var_in_md(var: str, columns: list, messages: list) -> bool:
 
 def check_in_md(values: list, columns: list, criteria: dict,
                 messages: list, nulls: list, step: str) -> None:
-    """
+    """Check that variables are present in the metadata.
+
     Parameters
     ----------
     values : list
@@ -164,9 +177,11 @@ def check_in_md(values: list, columns: list, criteria: dict,
     nulls : list
         Factors to be interpreted as np.nan.
     step : str
-        The type of criterion to apply (init, filter, add)
+        The type of criterion to apply (init, filter, add).
+
     """
     for var in values:
+        # Checks that variable is in the metadata.
         if check_var_in_md(var, columns, messages):
             continue
         if step in criteria:
@@ -176,7 +191,9 @@ def check_in_md(values: list, columns: list, criteria: dict,
 
 
 def check_key(key: str, messages: list) -> bool:
-    """
+    """Checks that criterion has a metadata variable
+    and a numeric separated by a comma (",").
+
     Parameters
     ----------
     key : str
@@ -188,6 +205,7 @@ def check_key(key: str, messages: list) -> bool:
     -------
     boolean : bool
         Whether to keep the key/value or not.
+
     """
     boolean = False
     if ',' not in key or len(key.split(',')) != 2:
@@ -199,7 +217,8 @@ def check_key(key: str, messages: list) -> bool:
 def check_filtering_criteria(init_filter: dict, metadata: pd.DataFrame,
                              messages: list, criteria: dict,
                              nulls: list, step: str) -> None:
-    """
+    """Check the passed criteria and
+    collect those that are properly formatted.
 
     Parameters
     ----------
@@ -215,27 +234,40 @@ def check_filtering_criteria(init_filter: dict, metadata: pd.DataFrame,
         Factors to be interpreted as np.nan.
     step : str
         The type of criterion to apply (init, filter, add)
+
     """
-    for key, values in init_filter.items():
-        if check_key(key, messages):
+    for variable_index, values in init_filter.items():
+        # Checks that criterion has a metadata variable
+        # and a numeric separated by a comma (",").
+        if check_key(variable_index, messages):
             continue
-        var, index = key.split(',')
-        if check_var_in_md(var, list(metadata.columns), messages):
+        variable, index = variable_index.split(',')
+        # Checks that variable is in the metadata.
+        if check_var_in_md(variable, list(metadata.columns), messages):
             continue
-        if check_numeric_indicator(var, index, messages):
+        # Checks that variable's numeric indicator is "0", "1" or "2"
+        if check_numeric_indicator(variable, index, messages):
             continue
-        if check_islist(var, values, messages):
+        # Checks that subsetting values are in a list
+        if check_islist(variable, values, messages):
             continue
+        # Checks that min-max values are a two-items list
         if check_index(index, values, messages):
             continue
         else:
-            boolean, common_values = check_factors(var, index, values, nulls, metadata, messages)
+            # Checks that subset values for the
+            # current variable are in metadata
+            boolean, common_values = check_factors(
+                variable, index, values, nulls, metadata, messages
+            )
+            # this is true if the variable is not in the metadata
             if boolean:
                 continue
+            # fill the correctly formatted criteria
             if step in criteria:
-                criteria[step][var, index] = common_values
+                criteria[step][variable, index] = common_values
             else:
-                criteria[step] = {(var, index): common_values}
+                criteria[step] = {(variable, index): common_values}
 
 
 def get_criteria(i_criteria: str, metadata: pd.DataFrame, nulls: list,
@@ -260,23 +292,45 @@ def get_criteria(i_criteria: str, metadata: pd.DataFrame, nulls: list,
     Returns
     -------
     criteria : dict
-        Full yml content, inclucing all inclusion/exclusion criteria.
+        Full yml content, including all inclusion/exclusion criteria.
+
     """
     criteria = {}
+    # Read the yaml criteria file
     criteria_dict = read_i_criteria(i_criteria)
-    for key, values in criteria_dict.items():
-        if key in ['init', 'filter', 'add']:
-            check_filtering_criteria(values, metadata, messages, criteria, nulls, key)
-        elif key == 'no_nan':
-            check_in_md(values, list(metadata.columns), criteria, messages, nulls, key)
+    # for each criteria application level and its criteria to apply
+    for level, values in criteria_dict.items():
+        # for the filtering / grafting criteria
+        if level in ['init', 'filter', 'add']:
+            # Check the passed criteria and collect
+            # those that are properly formatted
+            check_filtering_criteria(
+                values,
+                metadata,
+                messages,
+                criteria,
+                nulls,
+                level
+            )
+        # for the must-be non-nan variables
+        elif level == 'no_nan':
+            # check that they are present in the metadata
+            check_in_md(
+                values,
+                list(metadata.columns),
+                criteria,
+                messages,
+                nulls,
+                level
+            )
             continue
-
     return criteria
 
 
 def do_filtering(input_pd: pd.DataFrame, var: str, index: str,
                  values: list, numerical: list, messages: list) -> tuple:
     """
+
     Parameters
     ----------
     input_pd : pd.DataFrame
@@ -300,6 +354,7 @@ def do_filtering(input_pd: pd.DataFrame, var: str, index: str,
         Whether to keep the key/value or not.
     included : pd.DataFrame
         Metadata for the included samples only.
+
     """
     cur_name = ''
     boolean = False
@@ -330,7 +385,12 @@ def do_filtering(input_pd: pd.DataFrame, var: str, index: str,
 def apply_step_criteria(metadata: pd.DataFrame, criteria: dict,
                         numerical: list, messages: list,
                         flowcharts: dict, step: str) -> pd.DataFrame:
-    """
+    """Apply the filtering criteria for the current step.
+    There are three possible steps for now:
+        - init      initial filtering on the raw metadata.
+        - filter    selection based on the initially included samples.
+        - add       another filtering on the initially included samples.
+
     Parameters
     ----------
     metadata : pd.DataFrame
@@ -376,7 +436,8 @@ def apply_step_criteria(metadata: pd.DataFrame, criteria: dict,
 
 def apply_criteria(metadata: pd.DataFrame, criteria: dict,
                    numerical: list, messages: list) -> tuple:
-    """
+    """Apply filtering criteria to subset the metadata.
+
     Parameters
     ----------
     metadata : pd.DataFrame
@@ -394,27 +455,37 @@ def apply_criteria(metadata: pd.DataFrame, criteria: dict,
         Steps of the workflow with samples counts (simpler representation).
     included : pd.DataFrame
         Metadata for the included samples only.
+
     """
+
     flowcharts = {}
+    # Perform initial filtering on the raw metadata
+    # -> init_included = initially included samples
     if 'init' in criteria:
         init_included = apply_step_criteria(
             metadata, criteria, numerical, messages, flowcharts, 'init')
     else:
         init_included = metadata.copy()
 
+    # Perform a selection based on the initially included samples
+    # -> add_included = keep samples to be re-added later
     if 'add' in criteria:
         add_included = apply_step_criteria(
             init_included, criteria, numerical, messages, flowcharts, 'add')
     else:
         add_included = pd.DataFrame()
 
+    # Perform another filtering on the initially included samples
+    # -> filter_included = finally included samples
     if 'filter' in criteria:
         filter_included = apply_step_criteria(
             init_included, criteria, numerical, messages, flowcharts, 'filter')
     else:
         filter_included = init_included.copy()
 
+    # if there were samples to be re-added later
     if add_included.shape[0]:
+        # only get the samples not already in finally included samples
         common_sams = set(filter_included.index) & set(add_included.index)
         added_sams = set(add_included.index) ^ common_sams
         if common_sams:
@@ -422,7 +493,10 @@ def apply_criteria(metadata: pd.DataFrame, criteria: dict,
                 '%s samples not removed by criteria of "init"/"filter" steps re-added by '
                 'criteria of "add" step (not to worry: duplicates are dropped).' % len(common_sams)
             )
-        included = pd.concat([filter_included, add_included], axis=0, sort=False).drop_duplicates()
+        # add the samples add_included samples to the filter_included samples
+        included = pd.concat([filter_included, add_included], axis=0, sort=False)
+
+        # in
         flowcharts['filter'].append([
             '"add" samples',
             included.shape[0],

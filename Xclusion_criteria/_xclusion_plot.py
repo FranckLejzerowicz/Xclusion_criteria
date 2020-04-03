@@ -16,13 +16,22 @@ import pandas as pd
 import pkg_resources
 from os.path import dirname, isdir, isfile, splitext
 
+from Xclusion_criteria._xclusion_alt import (
+    make_flowchart,
+    get_selectors,
+    make_scatter,
+    make_barplot
+)
+
 RESOURCES = pkg_resources.resource_filename('Xclusion_criteria', 'resources')
 
 
 def make_visualizations(included: pd.DataFrame, i_plot_groups: str,
                         o_visualization: str, numerical: list,
-                        categorical: list, flowcharts: dict) -> None:
-    """
+                        categorical: list, flowcharts: dict,
+                        random_samples: bool) -> None:
+    """Build the three-panel criteria-based filtering figure.
+
     Parameters
     ----------
     included : pd.DataFrame
@@ -37,35 +46,55 @@ def make_visualizations(included: pd.DataFrame, i_plot_groups: str,
         Metadata variables that are categorical.
     flowcharts : dict
         Steps of the workflow with samples counts (simple representation).
+    random_samples : bool
+        Whether to reduce visualization to 100 random samples or not.
+
     """
     plot_groups = get_parsed_plot_groups(i_plot_groups)
 
-    included_num = get_included_num(included, numerical, 'numerical', plot_groups)
-    included_cat = get_included_num(included, categorical, 'categorical', plot_groups)
+    numerical = [x.lower() for x in numerical]
+    categorical = [x.lower() for x in categorical]
+    included.columns = [x.lower() for x in included.columns]
 
-    o_visualization_dir = dirname(o_visualization)
-    if not isdir(o_visualization_dir):
-        os.makedirs(o_visualization_dir)
+    print("numerical")
+    print(numerical)
+    print("categorical]")
+    print(categorical)
+
+    # Subset the metadata to the plotting numeric variables
+    included_num = get_included_num('numerical', numerical, included, plot_groups)
+    # Subset the metadata to the plotting categorical variables
+    included_cat = get_included_num('categorical', categorical, included, plot_groups)
+
+    # get output visualization file name
+    if '/' in o_visualization:
+        o_visualization_dir = dirname(o_visualization)
+        if not isdir(o_visualization_dir):
+            os.makedirs(o_visualization_dir)
     if not o_visualization.endswith('.html'):
         o_visualization = '%s.html' % o_visualization
+
     print('Start making the chart (html) figure')
-    make_user_chart(included_num, included_cat, flowcharts, o_visualization)
+    make_user_chart(included_num, included_cat, flowcharts,
+                    o_visualization, random_samples)
 
     # o_explorer = '%s_metadataExplorer.html' % splitext(o_visualization)[0]
     # make_explorer_chart(included.reset_index(), o_explorer, numerical, categorical)
 
 
-def get_included_num(included: pd.DataFrame, num_cat: list,
-                     nc: str, plot_groups: dict) -> pd.DataFrame:
-    """
+def get_included_num(nc: str, num_cat: list, included: pd.DataFrame,
+                     plot_groups: dict) -> pd.DataFrame:
+    """Subset the metadata to the numeric or (categorical)
+    variables passed for plotting (from the plotting .yml file).
+
     Parameters
     ----------
-    included : pd.DataFrame
-        Metadata for the included samples only.
-    num_cat : list
-        Metadata variables that are numerical (or categorical).
     nc : str
         "numerical" or "categorical"
+    num_cat : list
+        Metadata variables that are numerical (or categorical).
+    included : pd.DataFrame
+        Metadata for the included samples only.
     plot_groups : dict
         Groups (values) for barplots and scatters (keys).
 
@@ -74,34 +103,97 @@ def get_included_num(included: pd.DataFrame, num_cat: list,
     included_nc : pd.DataFrame
         Metadata for the included samples and the
         passed numerical (or categorical) variables.
+
     """
+
     included_nc = included[num_cat].copy()
     if nc not in plot_groups or not plot_groups[nc]:
+        # for the numerical data, no passed variable will use all
+        # variables in the dropdown menu (i.e. non subsetted "included_nc")
         if nc == 'categorical':
             included_nc['number_of_samples'] = 'number_of_samples'
             included_nc = included_nc[['number_of_samples']]
-            cat_to_plot = ['number_of_samples']
     else:
-        print(num_cat)
-        plot_groups_cats = list(plot_groups[nc])
-        print(plot_groups_cats[:3])
-        cat_to_plot = [x for x in plot_groups_cats if x in set(num_cat)]
-        print(cat_to_plot[:3])
-        cat_not_to_plot = [x for x in plot_groups_cats if x not in set(cat_to_plot)]
-        print(cat_not_to_plot[:3])
+        # get plotting variables lower cased
+        plot_groups_cats = set([x.lower() for x in plot_groups[nc]])
+        # get plotting variables in the metadata
+        cat_to_plot = plot_groups_cats & set(num_cat)
+        # get plotting variables NOT in the metadata
+        cat_not_to_plot = plot_groups_cats ^ cat_to_plot
+        # if there is no plotting variables in the metadata
         if not cat_to_plot:
+            # show warning and create a number of samples variable
             print(' --> all passed "%s" variables are not %s' % (nc, nc))
             if nc == 'categorical':
-                included_nc['number_of_samples'] = 'number_of_samples'
+                included_nc['number_of_samples'] = 'count'
                 cat_to_plot = ['number_of_samples']
-        elif cat_not_to_plot:
-            print(' --> %s passed "%s" that are not %s:' % (len(cat_not_to_plot), nc, nc))
+        # show plotting variables NOT in the metadata
+        if cat_not_to_plot:
+            print(' --> %s passed "%s" variables that are '
+                  'not %s:' % (len(cat_not_to_plot), nc, nc))
             print('\t* %s' % '\n\t* '.join(cat_not_to_plot))
-        included_nc = included_nc[cat_to_plot]
+        # in any case subset to the plotting variables in the metadata
+        included_nc = included_nc[sorted(cat_to_plot)]
     return included_nc
 
 
-def add_unique_per_cat_col(included_merged: pd.DataFrame) -> list:
+def get_included_us(num_cat: str, included_num_cat: pd.DataFrame) -> pd.DataFrame:
+    """Melt the table to get pairwise combinations
+    of numeric (or categorial) variables' values.
+
+    Parameters
+    ----------
+    num_cat : str
+        Whether the input table is numerical (or categorical)
+    included_num_cat : pd.DataFrame
+        Metadata for the included samples only
+        and for numerical (or categorical) variables only.
+            e.g. input (for numerical):
+                            variable1   variable2   variable3
+                sample_name
+                sample.ID.1 100000001   200000001   nan
+                sample.ID.2 100000002   200000002   300000002
+
+    Returns
+    -------
+    included_num_us : pd.DataFrame
+        Metadata for the included samples only and for numerical (or categorical) variables
+        only but now unstacked to have the numeric values as one column, merged with itself.
+            e.g. output for the above input (for numerical):
+                sample_name num_var_x   num_var_y   num_val_x   num_val_y
+                sample.ID.1 variable1   variable2   100000001   200000001
+                sample.ID.2 variable1   variable2   100000002   200000002
+                sample.ID.2 variable1   variable3   100000002   300000002
+                sample.ID.1 variable2   variable1   200000001   100000001
+                sample.ID.2 variable2   variable1   200000002   100000002
+                sample.ID.2 variable2   variable3   200000002   300000002
+                sample.ID.2 variable3   variable1   300000002   100000002
+                sample.ID.2 variable3   variable2   300000002   200000002
+        Note that the nan value is removed and that the 2-columns format is symmetric.
+    """
+    included_num_cat_us = included_num_cat.unstack().reset_index().rename(
+        columns={'level_0': '%s_variable' % num_cat, 0: '%s_value' % num_cat})
+    included_num_cat_us = included_num_cat_us.loc[~included_num_cat_us.isna().any(axis=1), :]
+
+    if num_cat == 'numerical':
+        included_num_cat_us = pd.merge(
+            included_num_cat_us, included_num_cat_us, on='sample_name'
+        )
+        included_merged_num_cols = [
+            'sample_name',
+            'numerical_variable_x',
+            'numerical_variable_y',
+            'numerical_value_x',
+            'numerical_value_y'
+        ]
+        included_num_cat_us = included_num_cat_us.loc[
+            (included_num_cat_us['numerical_variable_x']!=
+             included_num_cat_us['numerical_variable_y']),:]
+        included_num_cat_us = included_num_cat_us[included_merged_num_cols]
+    return included_num_cat_us
+
+
+def add_unique_id(included_merged: pd.DataFrame) -> list:
     """
     Parameters
     ----------
@@ -116,42 +208,29 @@ def add_unique_per_cat_col(included_merged: pd.DataFrame) -> list:
         - categorical variable
         - categorical variable's factor
     """
-    unique_per_cat_col_set = set()
-    unique_per_cat_col = []
-    for row in included_merged[['cat_var', 'cat_val']].values:
+    ids = []
+    unique_ids = set()
+    # for row in included_merged[['categorical_variable',
+    #                             'categorical_value']].values:
+    for row in included_merged[['sample_name',
+                                'categorical_variable',
+                                'categorical_value']].values:
         tow = tuple(row)
-        if tow not in unique_per_cat_col_set:
-            unique_per_cat_col_set.add(tow)
-            unique_per_cat_col.append('ID')
+        if tow not in unique_ids:
+            unique_ids.add(tow)
+            ids.append('ID')
         else:
-            unique_per_cat_col.append(np.nan)
-    return unique_per_cat_col
-
-
-def get_sorted_factors(included_merged: pd.DataFrame) -> list:
-    """
-    Parameters
-    ----------
-    included_merged : pd.DataFrame
-        Merged the numeric and categorical tables.
-    Returns
-    -------
-    sorted_factors : list
-        All the factors, sorted per variable.
-    """
-    sorted_factors = []
-    for var, var_pd in included_merged.sort_values('cat_var').groupby('cat_var'):
-        for val in sorted(var_pd.cat_val):
-            if str(val) != 'nan':
-                sorted_factors.append(val)
-    return sorted_factors
+            ids.append(np.nan)
+    return ids
 
 
 def make_user_chart(included_num: pd.DataFrame,
                     included_cat: pd.DataFrame,
                     flowcharts: dict,
-                    o_visualization: str) -> None:
-    """
+                    o_visualization: str,
+                    random_samples: bool) -> None:
+    """Build the figure.
+
     Parameters
     ----------
     included_num : pd.DataFrame
@@ -164,133 +243,67 @@ def make_user_chart(included_num: pd.DataFrame,
         Steps of the workflow with samples counts (simple representation).
     o_visualization : str
         Path to output visualization for the included samples only.
+    random_samples : bool
+        Whether to reduce visualization to 100 random samples or not.
+
     """
-    print(' - make filtering figure... ', end='')
-    flowcharts_pds = []
-    for step in ['init', 'filter', 'add']:
-        if step in flowcharts:
-            flowchart_pd = pd.DataFrame(flowcharts[step],
-                                        columns=['filter', 'samples', 'variable', 'values', 'indicator'])
-            flowchart_pd['step'] = step
-            flowcharts_pds.append(flowchart_pd)
-    flowcharts_pd = pd.concat(flowcharts_pds, axis=0, sort=False)
 
-    filter_order = []
-    for f in flowcharts_pd['filter'].tolist():
-        if f not in filter_order:
-            filter_order.append(f)
+    flowchart = make_flowchart(flowcharts)
 
-    # Selection progression figure (left panel)
-    curve = altair.Chart(
-        flowcharts_pd, width=200, height=200, title='Samples selection progression'
-    ).mark_line(
-        point=True
-    ).encode(
-        x=altair.X('filter', scale=altair.Scale(zero=False), sort=filter_order),
-        y=altair.Y('samples', scale=altair.Scale(zero=False)),
-        color='step',
-        tooltip=['step', 'filter', 'samples', 'variable', 'values', 'indicator']
-    )
-    print('Done')
-
+    # melt the table to get pairwise combinations of numeric variables' values
     print(' - get numeric melted table... ')
-    included_num_us = get_included_us(included_num, 'num')
+    included_num_us = get_included_us('numerical', included_num)
     print(' - get categorical melted table... ')
-    included_cat_us = get_included_us(included_cat, 'cat')
-    # merge the numeric and categorical tables
+    included_cat_us = get_included_us('categorical', included_cat)
 
-    all_samples = included_num_us.sample_name.unique()
-    if all_samples.size > 100:
-        print('More tha 100 samples -> samples will be used:')
-        random_samples = [random.sample(all_samples.tolist(), 10) for r in range(3)]
+    # get either the full sample set for figure representation or,
+    # because the table can be huge, a random sample.
+    all_samples = included_cat_us.sample_name.unique()
+    if random_samples and all_samples.size > 100:
+        print('More than 100 samples -> 3 times 100 samples will be used:')
+        cur_samples = [random.sample(all_samples.tolist(), 10) for r in range(3)]
         suffixes = ['rand100_0', 'rand100_1', 'rand100_2']
     else:
-        random_samples = [all_samples.tolist()]
+        cur_samples = [all_samples.tolist()]
         suffixes = ['']
 
+    # For each set of randomly-picked 100 samples
     for sdx, suffix in enumerate(suffixes):
-        random_sample = random_samples[sdx]
-        cur_included_num_us = included_num_us.loc[included_num_us.sample_name.isin(random_sample)]
-        cur_included_cat_us = included_cat_us.loc[included_cat_us.sample_name.isin(random_sample)]
+
+        # subset categorical and numerical melted tables to the random samples
+        cur_included_cat_us = included_cat_us.loc[
+            included_cat_us.sample_name.isin(cur_samples[sdx])]
+        cur_included_num_us = included_num_us.loc[
+            included_num_us.sample_name.isin(cur_samples[sdx])]
+
         print(' - merge numeric and categorical tables... ')
-        included_merged = cur_included_num_us.merge(cur_included_cat_us, on='sample_name', how='left')
+        included_merged = cur_included_num_us.merge(
+            cur_included_cat_us, on='sample_name', how='right')
+        # remove the samples that have NaN in any of the row
         included_merged = included_merged.loc[~included_merged.isna().any(axis=1), :]
         # add variable to indicate unique sample/variable/factor instances
-        included_merged['is_unique_ID_for_altair_plot'] =  add_unique_per_cat_col(included_merged)
-        print(included_merged.shape)
+        # included_merged['altair_ID'] = add_unique_id(included_merged)
+        print('included_merged')
+        print(included_merged)
 
-        print(' - make scatter figure... ', end='')
-        num_var_x = included_merged['num_var_x'].unique().tolist()
-        num_var_y = included_merged['num_var_y'].unique().tolist()
-        cont_dropdown_var_x = altair.binding_select(options=num_var_x)
-        cont_dropdown_var_y = altair.binding_select(options=num_var_y)
-        cont_select_var_x = altair.selection_single(
-            fields=['num_var_x'], bind=cont_dropdown_var_x,
-            init={'num_var_x': num_var_x[0]}, name="num_var_x", clear=False)
-        cont_select_var_y = altair.selection_single(
-            fields=['num_var_y'], bind=cont_dropdown_var_y,
-            init={'num_var_y': num_var_y[0]}, name="num_var_y", clear=False)
-        brush = altair.selection(type='interval', resolve='global')
-
-        # Scatter figure (left panel)
-        scatter_chart = altair.Chart(
-            included_merged, width=400, height=400, title='Numeric variables values per sample'
-        ).mark_point(
-            filled=True
-        ).encode(
-            x=altair.X('num_val_x:Q', scale=altair.Scale(zero=False)),
-            y=altair.Y('num_val_y:Q', scale=altair.Scale(zero=False)),
-            color=altair.condition(brush, 'num_val_y:Q', altair.ColorValue('gray')),
-            tooltip="sample_name:N"
-        ).add_selection(
-            brush, cont_select_var_x, cont_select_var_y,
-        ).transform_filter(
-            cont_select_var_x
-        ).transform_filter(
-            cont_select_var_y
-        ).resolve_scale(
-            color='independent'
-        )
-        print('Done')
-
-        # Make barplot, including:
-        # - the bars
-        print(' - make barplots figure...', end='')
-        sorted_factors = get_sorted_factors(included_merged)
-        bars_sel = altair.Chart(included_merged).mark_bar().encode(
-            x=altair.X('cat_val:N', sort=sorted_factors),
-            y='count(cat_val):Q',
-            color='cat_var:N'
-        ).properties(
-            width=600, height=200, title='Number of samples per categorical variable'
-        ).transform_filter(
-            {'not': altair.FieldEqualPredicate(field='is_unique_ID_for_altair_plot', equal='ID')}
-        )
-        # - the text on the bars
-        text_sel = bars_sel.mark_text(
-            align='center', baseline='middle', yOffset=-10
-        ).encode(
-            text='count(cat_val):Q'
-        )
-        # merge bars and text
-        meta_bars = (bars_sel + text_sel).transform_filter(
-            brush
-        )
-        print('Done')
+        dropdown_x, dropdown_y, brush = get_selectors(included_merged)
+        scatter = make_scatter(included_merged, dropdown_x, dropdown_y, brush)
+        barplot = make_barplot(included_merged, dropdown_x, dropdown_y, brush)
 
         print(' - Write figure... ', end='')
         # concatenate the three panels
-        chart = (curve | scatter_chart | meta_bars)
+        chart = (flowchart | scatter | barplot)
         chart = chart.resolve_scale(
             color='independent'
         )
+
         o_visualization = '%s%s%s' % (
             splitext(o_visualization)[0],
             suffixes[sdx],
             splitext(o_visualization)[1]
         )
         chart.save(o_visualization)
-        print('Done')
+        print('Done: %s' % o_visualization)
 
 
 def read_template_chart() -> dict:
@@ -440,50 +453,3 @@ def get_parsed_plot_groups(i_plot_groups: str) -> dict:
         with open(i_plot_groups) as handle:
             plot_groups.update(yaml.load(handle, Loader=yaml.FullLoader))
     return plot_groups
-
-
-def get_included_us(included_num_cat: pd.DataFrame, num_cat: str) -> pd.DataFrame:
-    """
-    Parameters
-    ----------
-    included_num_cat : pd.DataFrame
-        Metadata for the included samples only
-        and for numerical (or categorical) variables only.
-            e.g. input (for numerical):
-                            variable1   variable2   variable3
-                sample_name
-                sample.ID.1 100000001   200000001   nan
-                sample.ID.2 100000002   200000002   300000002
-    num_cat : str
-        Whether the input table is numerical (or categorical)
-
-    Returns
-    -------
-    included_num_us : pd.DataFrame
-        Metadata for the included samples only and for numerical (or categorical) variables
-        only but now unstacked to have the numeric values as one column, merged with itself.
-            e.g. output for the above input (for numerical):
-                sample_name num_var_x   num_var_y   num_val_x   num_val_y
-                sample.ID.1 variable1   variable2   100000001   200000001
-                sample.ID.2 variable1   variable2   100000002   200000002
-                sample.ID.2 variable1   variable3   100000002   300000002
-                sample.ID.1 variable2   variable1   200000001   100000001
-                sample.ID.2 variable2   variable1   200000002   100000002
-                sample.ID.2 variable2   variable3   200000002   300000002
-                sample.ID.2 variable3   variable1   300000002   100000002
-                sample.ID.2 variable3   variable2   300000002   200000002
-        Note that the nan value is removed and that the 2-columns format is symmetric.
-    """
-    included_num_cat_us = included_num_cat.unstack().reset_index().rename(
-        columns={'level_0': '%s_var' % num_cat, 0: '%s_val' % num_cat})
-    included_num_cat_us = included_num_cat_us.loc[~included_num_cat_us.isna().any(axis=1), :]
-
-    if num_cat == 'num':
-        included_num_cat_us = pd.merge(included_num_cat_us, included_num_cat_us, on='sample_name')
-        included_merged_num_cols = ['sample_name', 'num_var_x', 'num_var_y', 'num_val_x', 'num_val_y']
-        included_num_cat_us = included_num_cat_us.loc[
-                          (included_num_cat_us['num_var_x'] !=
-                           included_num_cat_us['num_var_y']), :]
-        included_num_cat_us = included_num_cat_us[included_merged_num_cols]
-
-    return included_num_cat_us

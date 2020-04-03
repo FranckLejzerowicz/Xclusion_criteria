@@ -1,20 +1,59 @@
-sequence:
+init:
   antibiotic_history,1:
-    - "I have not taken antibiotics in the past year."
-    - "Year"
+    - 'I have not taken antibiotics in the past year.'
+    - 'Year'
+  alzheimers,1:
+    - 'I do not have this condition'
+  autoimmune,1:
+    - 'I do not have this condition'
+  cancer,1:
+    - 'I do not have this condition'
+  diabetes,1:
+    - 'I do not have this condition'
   ibd,1:
-    - "I do not have this condition"
+    - 'I do not have this condition'
+  ibs,1:
+    - 'I do not have this condition'
+  sex,0:
+    - 'NULLS'
+    - 'other'
   age_cat,0:
-    - NULLS
-    - "70+"
-    - "child"
-    - "teen"
-    - "baby"
+    - 'NULLS'
+    - '70+'
+    - 'child'
+    - 'teen'
+    - 'baby'
+  bmi,2:
+    - '18'
+    - 'None'
+  sample_type,1:
+    - 'Stool'
+  country,1:
+    - 'USA'
+    - 'United Kingdom'
 add:
   alcohol_consumption,1:
     - 'No'
 filter:
+  vioscreen_status,1:
+    - 'filled - complete - evaluated - OK'
+    - 'filled - complete - not evaluated'
+    - 'filled - complete - evaluated - not OK'
+  alcohol_consumption,1:
+    - 'Yes'
+    - 'No'
   alcohol_types_red_wine,1:
     - 'Yes'
+    - 'No'
+  alcohol_types_beercider,1:
+    - 'No'
+  alcohol_types_sour_beers,1:
+    - 'No'
+  alcohol_types_spiritshard_alcohol,1:
+    - 'No'
+  alcohol_types_unspecified,1:
+    - 'No'
+  alcohol_types_white_wine,1:
+    - 'No'
 no_nan:
   - bmi

@@ -11,8 +11,7 @@ import pandas as pd
 
 
 def get_dtypes_final(md: pd.DataFrame, nulls: list, dtypes_init: dict) -> dict:
-    """
-    Refine the inference of the current variables' dtypes
+    """Refine the inference of the current variables' dtypes.
 
     Parameters
     ----------
@@ -36,6 +35,7 @@ def get_dtypes_final(md: pd.DataFrame, nulls: list, dtypes_init: dict) -> dict:
     dtypes_final : dict
         Key     = variable
         Value   = dtype
+
     """
     dtypes_final = {}
     for variable, dtypes in dtypes_init.items():
@@ -60,8 +60,7 @@ def get_dtypes_final(md: pd.DataFrame, nulls: list, dtypes_init: dict) -> dict:
 
 
 def get_dtypes_init(md: pd.DataFrame) -> dict:
-    """
-    Infer the variable's dtypes of each column.
+    """Infer the variable's dtypes of each column.
 
     Parameters
     ----------
@@ -90,13 +89,13 @@ def get_dtypes_init(md: pd.DataFrame) -> dict:
         elif native_type.startswith('float'):
             dtypes_init[variable] = ['float']
         else:
+            # Check variable's factors for stronger inference
             dtypes_init[variable] = check_dtype_object(md[variable])
     return dtypes_init
 
 
 def check_dtype_object(factors: pd.Series) -> list:
-    """
-    Check variable's factors.
+    """Check variable's factors.
 
     Parameters
     ----------
@@ -111,7 +110,9 @@ def check_dtype_object(factors: pd.Series) -> list:
             ['object', 'object'] : factors are strings
             ['object', 'float']  : factors are float (or np.nan)
             ['object', 'check']  : factors are float + "polluting" string
-            """
+
+    """
+
     d_type = ['object']
     has_nan = False
     has_float = False
@@ -145,8 +146,7 @@ def check_dtype_object(factors: pd.Series) -> list:
 
 
 def get_dtypes(metadata: pd.DataFrame, nulls: list) -> dict:
-    """
-    Get the dtypes of each column of the metadata table.
+    """Get the dtypes of each column of the metadata table.
 
     Parameters
     ----------
@@ -160,16 +160,19 @@ def get_dtypes(metadata: pd.DataFrame, nulls: list) -> dict:
     dtypes : dict
         Key     = Metadata variable
         Value   = Metadata variable's dtype
+
     """
+
+    # Infer the variable's dtypes of each column
     dtypes_init = get_dtypes_init(metadata)
+    # Refine the inference of the current variables' dtypes
     dtypes = get_dtypes_final(metadata, nulls, dtypes_init)
     return dtypes
 
 
-def split_variables_types(dtypes: dict, criteria: dict,
-                          numerical: list, categorical: list) -> None:
-    """
-    Split variables of each metadata according to
+def split_variables_types(dtypes: dict, numerical: list,
+                          categorical: list) -> None:
+    """Split variables of each metadata according to
     whether it is numeric or categorical.
 
     Parameters
@@ -177,26 +180,23 @@ def split_variables_types(dtypes: dict, criteria: dict,
     dtypes : dict
         Key     = Metadata variable.
         Value   = Metadata variable's dtype.
-    criteria : dict
-        Inclusion/exclusion criteria to apply.
     numerical : list
         Metadata variables that are numeric.
     categorical : list
         Metadata variables that are categorical.
+
     """
-    # all_criteria_variables = set(
-    #     [y[0] for x in ['init', 'add', 'filter'] for y in criteria[x].keys() if x in criteria]
-    # )
+
     for var, dtype in dtypes.items():
         if str(dtype) == 'object':
             categorical.append(var)
         else:
-        # elif str(dtype) in ['int', 'float']:
             numerical.append(var)
 
 
 def check_num_cat_lists(numerical: list, categorical: list) -> tuple:
-    """
+    """Check there's min 3 categorical and 2 numerical variables.
+
     Parameters
     ----------
     numerical : list
@@ -210,7 +210,9 @@ def check_num_cat_lists(numerical: list, categorical: list) -> tuple:
         Whether to stop processing or not.
     message : str
         Problem encountered with the numerical / categorical variables.
+
     """
+
     boolean = False
     message = ''
     if len(numerical) < 2:
@@ -219,5 +221,4 @@ def check_num_cat_lists(numerical: list, categorical: list) -> tuple:
     if len(categorical) < 1:
         message = 'Not enough categorical variables in the metadata (%s)' % len(categorical)
         boolean = True
-
     return boolean, message

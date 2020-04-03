@@ -13,8 +13,7 @@ from os.path import isfile
 
 
 def read_i_criteria(i_criteria: str) -> dict:
-    """
-    Read the yaml file
+    """Read the yaml criteria file.
 
     Parameters
     ----------

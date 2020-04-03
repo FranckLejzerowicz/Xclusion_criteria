@@ -69,7 +69,7 @@ class TestDtypes(unittest.TestCase):
         }
 
     def test_split_variables_types(self):
-        num, cat = split_variables_types(self.dtypes, self.criteria)
+        num, cat = split_variables_types(self.dtypes)
         self.assertEqual(sorted(num), sorted(['num','float','num_nan', 'num_str_ok','num_str_notok']))
         self.assertEqual(sorted(cat), sorted(['cat_1','cat_nan']))
 
