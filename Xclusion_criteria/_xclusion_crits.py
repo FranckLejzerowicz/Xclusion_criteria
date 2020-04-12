@@ -153,11 +153,10 @@ def check_var_in_md(var: str, columns: list, messages: list) -> bool:
         Whether to keep the key/value or not.
 
     """
-    boolean = False
     if var not in columns:
         messages.append('Variable %s not in metadata (skipped)' % var)
-        boolean = True
-    return boolean
+        return True
+    return False
 
 
 def check_in_md(values: list, columns: list, criteria: dict,
@@ -324,6 +323,8 @@ def get_criteria(i_criteria: str, metadata: pd.DataFrame, nulls: list,
                 level
             )
             continue
+        # else:
+        #     raise(!)
     return criteria
 
 

@@ -162,7 +162,6 @@ def get_dtypes(metadata: pd.DataFrame, nulls: list) -> dict:
         Value   = Metadata variable's dtype
 
     """
-
     # Infer the variable's dtypes of each column
     dtypes_init = get_dtypes_init(metadata)
     # Refine the inference of the current variables' dtypes
@@ -194,11 +193,14 @@ def split_variables_types(dtypes: dict, numerical: list,
             numerical.append(var)
 
 
-def check_num_cat_lists(numerical: list, categorical: list) -> tuple:
+def check_num_cat_lists(plot_groups: dict, numerical: list,
+                        categorical: list) -> tuple:
     """Check there's min 3 categorical and 2 numerical variables.
 
     Parameters
     ----------
+    plot_groups : dict
+        Path to yml config file for the different groups to visualize.
     numerical : list
         Metadata variables that are numeric.
     categorical : list
@@ -210,15 +212,19 @@ def check_num_cat_lists(numerical: list, categorical: list) -> tuple:
         Whether to stop processing or not.
     message : str
         Problem encountered with the numerical / categorical variables.
-
     """
 
     boolean = False
-    message = ''
+    if 'numerical' in plot_groups:
+        numerical = [x for x in numerical if x in plot_groups['numerical']]
     if len(numerical) < 2:
-        message = 'Not enough numerical variables in the metadata (%s)' % len(numerical)
+        print('Not enough numerical variables in the metadata (%s)' % len(numerical))
         boolean = True
+
+    if 'categorical' in plot_groups:
+        categorical = [x for x in categorical if x in plot_groups['categorical']]
     if len(categorical) < 1:
-        message = 'Not enough categorical variables in the metadata (%s)' % len(categorical)
+        print('Not enough categorical variables in the metadata (%s)' % len(categorical))
         boolean = True
-    return boolean, message
+
+    return boolean

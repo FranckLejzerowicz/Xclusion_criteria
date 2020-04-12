@@ -24,31 +24,35 @@ def make_flowchart(flowcharts: dict):
         Altair flowchart figure.
 
     """
-    print(' - make filtering figure... ', end='')
+    print('   * make filtering figure... ', end='')
     flowcharts_pds = []
-    for step in ['init', 'add', 'filter']:
+    for step in ['init', 'add', 'filter', 'data']:
         if step in flowcharts:
             flowchart_pd = pd.DataFrame(flowcharts[step],
-                                        columns=['filter', 'samples', 'variable',
+                                        columns=['criterion', 'samples', 'variable',
                                                  'values', 'indicator'])
-            flowchart_pd['step'] = step
+            flowchart_pd['criterion'] = ['%s (%s)' % (x, step) for x in flowchart_pd['criterion']]
+            flowchart_pd['filter'] = '%s (%s steps)' % (step, len(flowchart_pd.criterion.unique()))
             flowcharts_pds.append(flowchart_pd)
     flowcharts_pd = pd.concat(flowcharts_pds, axis=0, sort=False)
-    filter_order = []
-    for f in flowcharts_pd['filter'].tolist():
-        if f not in filter_order:
-            filter_order.append(f)
+    criterion_order = []
+    for f in flowcharts_pd['criterion'].tolist():
+        if f not in criterion_order:
+            criterion_order.append(f)
 
+    width = 200
+    if len(criterion_order) >= 30:
+        width = width + (width * ((len(criterion_order) - 30)/50))
     # Selection progression figure (left panel)
     curve = altair.Chart(
-        flowcharts_pd, width=200, height=200, title='Samples selection progression'
+        flowcharts_pd, width=width, height=200, title='Samples selection progression'
     ).mark_line(
         point=True
     ).encode(
-        x=altair.X('filter', scale=altair.Scale(zero=False), sort=filter_order),
+        x=altair.X('criterion', scale=altair.Scale(zero=False), sort=criterion_order),
         y=altair.Y('samples', scale=altair.Scale(zero=False)),
-        color='step',
-        tooltip=['step', 'filter', 'samples',
+        color='filter',
+        tooltip=['filter', 'criterion', 'samples',
                  'variable', 'values', 'indicator']
     )
     print('Done')
@@ -70,18 +74,8 @@ def get_selectors(included_merged: pd.DataFrame):
 
     """
     # Dropdown menu first numerical data menu
-    numerical_variables_x = included_merged['numerical_variable_x'].unique().tolist()
-    dropdown_variables_x = altair.binding_select(options=numerical_variables_x)
-    dropdown_x = altair.selection_single(
-        fields=['numerical_variable_x'],
-        bind=dropdown_variables_x,
-        init={'numerical_variable_x': numerical_variables_x[0]},
-        name="numerical_variable_x",
-        on="click[event.shiftKey&!event.shiftKey]",
-        clear = False,
-    )
-
     # Dropdown menu second numerical data menu
+
     numerical_variables_y = included_merged['numerical_variable_y'].unique().tolist()
     dropdown_variables_y = altair.binding_select(options=numerical_variables_y)
     dropdown_y = altair.selection_single(
@@ -92,7 +86,16 @@ def get_selectors(included_merged: pd.DataFrame):
         on="click[event.shiftKey&!event.shiftKey]",
         clear=False
     )
-
+    numerical_variables_x = included_merged['numerical_variable_x'].unique().tolist()
+    dropdown_variables_x = altair.binding_select(options=numerical_variables_x)
+    dropdown_x = altair.selection_single(
+        fields=['numerical_variable_x'],
+        bind=dropdown_variables_x,
+        init={'numerical_variable_x': numerical_variables_x[0]},
+        name="numerical_variable_x",
+        on="click[event.shiftKey&!event.shiftKey]",
+        clear = False,
+    )
     # Samples selector brush
     brush = altair.selection(
         type='interval',
@@ -122,7 +125,7 @@ def make_scatter(included_merged: pd.DataFrame,
         Interactive scatter plot panel.
 
     """
-    print(' - make scatter figure... ', end='')
+    print('   * make scatter figure... ', end='')
     scatter = altair.Chart(
         included_merged, width=400, height=400,
         title='Numeric variables values per sample'
@@ -139,13 +142,13 @@ def make_scatter(included_merged: pd.DataFrame,
                                altair.ColorValue('gray')),
         tooltip="sample_name:N"
     ).transform_filter(
-        dropdown_x
+        dropdown_y
     ).transform_filter(
-        dropdown_y
-    ).add_selection(
         dropdown_x
     ).add_selection(
         dropdown_y
+    ).add_selection(
+        dropdown_x
     ).add_selection(
         brush
     ).resolve_scale(
@@ -155,7 +158,7 @@ def make_scatter(included_merged: pd.DataFrame,
     return scatter
 
 
-def make_barplot(included_merged: pd.DataFrame,
+def make_table_text(included_merged: pd.DataFrame,
                  dropdown_x, dropdown_y, brush):
     """Make the interactive batplot plot panel (right panel).
 
@@ -172,23 +175,66 @@ def make_barplot(included_merged: pd.DataFrame,
 
     Returns
     -------
-    batplot : Altair chart
-        Interactive scatter plot panel.
+    table_text : Altair chart
+        Interactive text plot panel.
 
     """
 
+    table_text = altair.Chart(
+        included_merged
+    ).mark_text(
+    ).encode(
+        text='count(categorical_variable):Q'
+    ).properties(
+        title='# selected samples'
+    ).transform_filter(
+        brush
+    ).transform_filter(
+        dropdown_x
+    ).transform_filter(
+        dropdown_y
+    ).transform_filter(
+        altair.FieldEqualPredicate(
+            field='categorical_variable',
+            equal=included_merged.categorical_variable.unique().tolist()[0]
+        )
+    )
+    return table_text
+
+
+def make_barplot(included_merged: pd.DataFrame,
+                 dropdown_x, dropdown_y, brush):
+    """Make the interactive barplot plot panel (right panel).
+
+    Parameters
+    ----------
+    included_merged : pd.DataFrame
+        Merged numeric and categorical tables.
+    dropdown_x : Altair feature
+        Dropdown menu first numerical data menu
+    dropdown_y : Altair feature
+        Dropdown menu second numerical data menu
+    brush : Altair feature
+        Samples selector brush
+
+    Returns
+    -------
+    barplot : Altair chart
+        Interactive barplot plot panel.
+
+    """
+
+
     # the bars
-    print(' - make barplots figure...', end='')
+    print('   * make barplots figure...', end='')
     sorted_factors = get_sorted_factors(included_merged)
-    print(included_merged.loc[
-          (included_merged.numerical_variable_x == 'num1') &
-          (included_merged.numerical_variable_y == 'num3'),:])
+    width = int(15 * len(list(sorted_factors)))
     bars = altair.Chart(included_merged).mark_bar().encode(
         x=altair.X('categorical_value:N', sort=sorted_factors),
         y='count(categorical_value):Q',
         color='categorical_variable:N'
     ).properties(
-        width=600, height=200,
+        width=width, height=200,
         title='Number of samples per categorical variable'
     ).transform_filter(
         dropdown_x
@@ -216,8 +262,6 @@ def make_barplot(included_merged: pd.DataFrame,
 
 def get_sorted_factors(included_merged: pd.DataFrame) -> list:
     """
-
-
     Parameters
     ----------
     included_merged : pd.DataFrame
@@ -230,7 +274,8 @@ def get_sorted_factors(included_merged: pd.DataFrame) -> list:
     sorted_factors = []
     for var, var_pd in included_merged.sort_values(
             'categorical_variable').groupby('categorical_variable'):
-        for val in sorted(var_pd.categorical_value):
+        for val in sorted(var_pd.categorical_value.unique()):
             if str(val) != 'nan':
-                sorted_factors.append(val)
+                if val not in sorted_factors:
+                    sorted_factors.append(val)
     return sorted_factors
