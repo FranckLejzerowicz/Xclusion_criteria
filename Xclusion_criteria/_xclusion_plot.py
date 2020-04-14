@@ -281,7 +281,6 @@ def make_user_chart(included_num: pd.DataFrame,
 
         # make redundant factor unique
         included_merged = add_unique_categorical(included_merged)
-        included_merged.to_csv('./Xclusion_criteria/tests/output/test.tsv', index=False, sep='\t')
 
         dropdown_x, dropdown_y, brush = get_selectors(included_merged)
         scatter = make_scatter(included_merged, dropdown_x, dropdown_y, brush)

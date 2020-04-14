@@ -108,7 +108,8 @@ def xclusion_criteria(
     TF = {'False': 'No', 'false': 'No', False: 'No',
           'True': 'Yes', 'true': 'Yes', True: 'No'}
     metadata.replace(
-        dict((x, TF) for x in metadata.columns if x in categorical),
+        dict((x, TF) for x in metadata.columns if
+             x in categorical and str(metadata[x].dtype)=='object'),
         inplace=True)
 
     # Apply filtering criteria to subset the metadata
