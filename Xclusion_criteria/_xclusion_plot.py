@@ -244,59 +244,74 @@ def make_user_chart(included_num: pd.DataFrame,
 
     flowchart = make_flowchart(flowcharts)
 
-    # melt the table to get pairwise combinations of numeric variables' values
-    print(' - get numeric melted table... ')
-    included_num_us = get_included_us('numerical', included_num)
-    print(' - get categorical melted table... ')
-    included_cat_us = get_included_us('categorical', included_cat)
+    if included_num.shape[0]:
+        # melt the table to get pairwise combinations of numeric variables' values
+        print(' - get numeric melted table... ')
+        included_num_us = get_included_us('numerical', included_num)
+        print(' - get categorical melted table... ')
+        included_cat_us = get_included_us('categorical', included_cat)
 
-    # get either the full sample set for figure representation or,
-    # because the table can be huge, a random sample.
-    all_samples = included_cat_us.sample_name.unique()
+        # get either the full sample set for figure representation or,
+        # because the table can be huge, a random sample.
+        all_samples = included_cat_us.sample_name.unique()
 
-    N = 10000
-    R = 2
-    if random_samples and all_samples.size > N:
-        print('More than 100 samples -> 3 times 100 samples will be used:')
-        cur_samples = [random.sample(all_samples.tolist(), N) for r in range(R)]
-        suffixes = ['_rand%s_%s' % (N, r) for r in range(R)]
+        N = 10000
+        R = 2
+        if random_samples and all_samples.size > N:
+            print('More than 100 samples -> 3 times 100 samples will be used:')
+            cur_samples = [random.sample(all_samples.tolist(), N) for r in range(R)]
+            suffixes = ['_rand%s_%s' % (N, r) for r in range(R)]
+        else:
+            cur_samples = [all_samples.tolist()]
+            suffixes = ['']
+
+        # For each set of randomly-picked 100 samples
+        for sdx, suffix in enumerate(suffixes):
+
+            # subset categorical and numerical melted tables to the random samples
+            cur_included_num_us = included_num_us.loc[
+                included_num_us.sample_name.isin(cur_samples[sdx])]
+            cur_included_cat_us = included_cat_us.loc[
+                included_cat_us.sample_name.isin(cur_samples[sdx])]
+
+            print(' - merge numeric and categorical tables... ')
+            included_merged = cur_included_num_us.merge(
+                cur_included_cat_us, on='sample_name', how='right')
+            # remove the samples that have NaN in any of the row
+            included_merged = included_merged.loc[~included_merged.isna().any(axis=1), :]
+
+            # make redundant factor unique
+            included_merged = add_unique_categorical(included_merged)
+
+            dropdown_x, dropdown_y, brush = get_selectors(included_merged)
+            scatter = make_scatter(included_merged, dropdown_x, dropdown_y, brush)
+            table_text = make_table_text(included_merged, dropdown_x, dropdown_y, brush)
+            barplot = make_barplot(included_merged, dropdown_x, dropdown_y, brush)
+
+            print(' - Write figure... ', end='')
+            # concatenate the three panels
+            chart = (flowchart | scatter | (table_text & barplot))
+            chart = chart.resolve_scale(
+                color='independent'
+            )
+
+            o_visualization_fp = '%s%s%s' % (
+                splitext(o_visualization)[0],
+                suffix,
+                splitext(o_visualization)[1]
+            )
+            chart.save(o_visualization_fp)
+            print('Done: %s' % o_visualization_fp)
     else:
-        cur_samples = [all_samples.tolist()]
-        suffixes = ['']
-
-    # For each set of randomly-picked 100 samples
-    for sdx, suffix in enumerate(suffixes):
-
-        # subset categorical and numerical melted tables to the random samples
-        cur_included_num_us = included_num_us.loc[
-            included_num_us.sample_name.isin(cur_samples[sdx])]
-        cur_included_cat_us = included_cat_us.loc[
-            included_cat_us.sample_name.isin(cur_samples[sdx])]
-
-        print(' - merge numeric and categorical tables... ')
-        included_merged = cur_included_num_us.merge(
-            cur_included_cat_us, on='sample_name', how='right')
-        # remove the samples that have NaN in any of the row
-        included_merged = included_merged.loc[~included_merged.isna().any(axis=1), :]
-
-        # make redundant factor unique
-        included_merged = add_unique_categorical(included_merged)
-
-        dropdown_x, dropdown_y, brush = get_selectors(included_merged)
-        scatter = make_scatter(included_merged, dropdown_x, dropdown_y, brush)
-        table_text = make_table_text(included_merged, dropdown_x, dropdown_y, brush)
-        barplot = make_barplot(included_merged, dropdown_x, dropdown_y, brush)
-
         print(' - Write figure... ', end='')
         # concatenate the three panels
-        chart = (flowchart | scatter | (table_text & barplot))
+        chart = flowchart
         chart = chart.resolve_scale(
             color='independent'
         )
 
-        o_visualization_fp = '%s%s%s' % (
+        o_visualization_fp = '%s_emptySelection%s' % (
             splitext(o_visualization)[0],
-            suffix,
             splitext(o_visualization)[1]
         )
         chart.save(o_visualization_fp)

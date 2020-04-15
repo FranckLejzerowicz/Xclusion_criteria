@@ -122,20 +122,21 @@ def xclusion_criteria(
             print(message)
     print('Done.')
 
-    # write the metadata for criteria-included samples
-    print('- write the metadata for criteria-included samples...', end=' ')
-    included.reset_index().to_csv(o_included, index=False, sep='\t')
-    print('Done.')
+    if included.shape[0]:
+        # write the metadata for criteria-included samples
+        print('- write the metadata for criteria-included samples...', end=' ')
+        included.reset_index().to_csv(o_included, index=False, sep='\t')
+        print('Done.')
 
     # write the metadata for criteria-excluded samples if requested
-    if o_excluded:
+    if o_excluded and included.shape[0]:
         print('- write the metadata for criteria-excluded samples...', end=' ')
         excluded = metadata.loc[[x for x in metadata.index if x not in included.index],:].copy()
         excluded.reset_index().to_csv(o_excluded, index=False, sep='\t')
         print('Done.')
 
-    if fetch:
-        included = fetch_data(o_included, flowcharts, o_metadata_file,
+    if fetch and included.shape[0]:
+            included = fetch_data(o_included, flowcharts, o_metadata_file,
                               o_biom_file, p_redbiom_context, p_bloom_sequences,
                               p_reads_filter, unique, update, dim)
 
@@ -143,20 +144,22 @@ def xclusion_criteria(
     print('- check there are min 3 categorical and 2 numerical variables...')
     plot_groups = parse_plot_groups(i_plot_groups)
 
-    print()
-    for num in sorted(numerical):
-        print('  [numerical]',
-              num,  '(n=%s/%s)' % (sum(included[num].isnull()==False), included.shape[0]))
-    print()
-    for cat in sorted(categorical):
-        if cat in included.columns:
-            cats_dict = included[cat].value_counts().to_dict()
-            print('  [categorical]', cat, '(n=%s:' % len(cats_dict), end=' ')
-            if len(cats_dict) > 10:
-                print('not showing)')
-            else:
-                print('%s)' % ','.join(['%s:%s' % (k,v) if len(str(k))<10 else
-                                        '%s:%s' % (k[:10],v) for k,v in cats_dict.items()]))
+
+    if included.shape[0]:
+        print()
+        for num in sorted(numerical):
+            print('  [numerical]',
+                  num,  '(n=%s/%s)' % (sum(included[num].isnull()==False), included.shape[0]))
+        print()
+        for cat in sorted(categorical):
+            if cat in included.columns:
+                cats_dict = included[cat].value_counts().to_dict()
+                print('  [categorical]', cat, '(n=%s:' % len(cats_dict), end=' ')
+                if len(cats_dict) > 10:
+                    print('not showing)')
+                else:
+                    print('%s)' % ','.join(['%s:%s' % (k,v) if len(str(k))<10 else
+                                            '%s:%s' % (k[:10],v) for k,v in cats_dict.items()]))
 
     no_fig = check_num_cat_lists(plot_groups, numerical, categorical)
     # show categorical/numerical variables concern

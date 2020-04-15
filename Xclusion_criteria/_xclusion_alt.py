@@ -40,9 +40,10 @@ def make_flowchart(flowcharts: dict):
         if f not in criterion_order:
             criterion_order.append(f)
 
-    width = 200
-    if len(criterion_order) >= 30:
-        width = width + (width * ((len(criterion_order) - 30)/50))
+    # width = 200
+    # if len(criterion_order) >= 20:
+    #     width = width + (width * ((len(criterion_order) - 30)/50))
+    width = len(criterion_order) * 10
     # Selection progression figure (left panel)
     curve = altair.Chart(
         flowcharts_pd, width=width, height=200, title='Samples selection progression'
