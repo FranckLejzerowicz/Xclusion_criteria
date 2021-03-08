@@ -33,7 +33,7 @@ def read_i_criteria(i_criteria: str) -> dict:
     parsed_criteria = {}
     if i_criteria and isfile(i_criteria):
         with open(i_criteria) as handle:
-            parsed_criteria = yaml.load(handle, Loader=yaml.FullLoader)
+            parsed_criteria = yaml.load(handle)
     return parsed_criteria
 
 
@@ -201,7 +201,8 @@ def parse_plot_groups(i_plot_groups: str) -> dict:
     plot_groups = {}
     if i_plot_groups and isfile(i_plot_groups):
         with open(i_plot_groups) as handle:
-            plot_groups.update(yaml.load(handle, Loader=yaml.FullLoader))
+            # plot_groups.update(yaml.load(handle, Loader=yaml.FullLoader))
+            plot_groups.update(yaml.load(handle))
 
     for num_cat in ['categorical', 'numerical']:
         if num_cat in plot_groups:

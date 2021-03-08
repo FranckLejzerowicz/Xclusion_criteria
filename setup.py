@@ -60,7 +60,7 @@ setup(
         'biom-format >= 2.1.5',
         'redbiom >= 0.3.5',
         'matplotlib',
-        'pyyaml'
+        'pyyaml == 3.13'
     ],
     classifiers=classifiers,
     package_data={'Xclusion_criteria': ['resources/nulls.txt',
