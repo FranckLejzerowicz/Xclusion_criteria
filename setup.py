@@ -63,6 +63,9 @@ setup(
         'pyyaml'
     ],
     classifiers=classifiers,
+    package_data={'Xclusion_criteria': ['resources/nulls.txt',
+                                        'resources/template.chart.json',
+                                        'resources/template.text.html']},
     entry_points={'console_scripts': standalone},
     python_requires='>=3.6',
 )
