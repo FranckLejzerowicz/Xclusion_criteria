@@ -68,7 +68,10 @@ def read_meta_pd(metadata_file: str) -> pd.DataFrame:
     meta_pd.set_index('sample_name', inplace=True)
     meta_pd.columns = [x.lower() for x in meta_pd.columns]
     # remove NaN only columns
-    meta_pd = meta_pd.loc[:,~meta_pd.isna().all()]
+    meta_pd = meta_pd.loc[:, ~meta_pd.isna().all()]
+    # remove duplicate columns
+    meta_no_duplicates = [meta_pd.columns.tolist().index(x) for x in meta_pd.columns.tolist()]
+    meta_pd = meta_pd.iloc[:, meta_no_duplicates]
     return meta_pd
 
 

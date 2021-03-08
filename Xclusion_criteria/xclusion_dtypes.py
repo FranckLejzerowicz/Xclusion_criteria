@@ -90,7 +90,6 @@ def get_dtypes_init(md: pd.DataFrame) -> dict:
             dtypes_init[variable] = ['float']
         else:
             # Check variable's factors for stronger inference
-            print(md[variable])
             dtypes_init[variable] = check_dtype_object(md[variable])
     return dtypes_init
 
@@ -113,7 +112,6 @@ def check_dtype_object(factors: pd.Series) -> list:
             ['object', 'check']  : factors are float + "polluting" string
 
     """
-
     d_type = ['object']
     has_nan = False
     has_float = False
