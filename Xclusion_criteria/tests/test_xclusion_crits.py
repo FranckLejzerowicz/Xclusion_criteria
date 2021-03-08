@@ -13,7 +13,7 @@ import pkg_resources
 from pandas.testing import assert_frame_equal
 
 
-from Xclusion_criteria._xclusion_crits import (
+from Xclusion_criteria.xclusion_crits import (
     check_in_md,
     check_factors,
     check_index,

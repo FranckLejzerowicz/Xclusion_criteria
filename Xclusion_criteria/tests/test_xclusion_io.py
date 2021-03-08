@@ -11,7 +11,7 @@ import pkg_resources
 import pandas as pd
 
 from pandas.testing import assert_frame_equal
-from Xclusion_criteria._xclusion_io import read_meta_pd, read_i_criteria
+from Xclusion_criteria.xclusion_io import read_meta_pd, read_i_criteria
 
 ROOT = pkg_resources.resource_filename('Xclusion_criteria', 'tests')
 

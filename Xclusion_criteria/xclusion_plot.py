@@ -16,7 +16,7 @@ import pkg_resources
 import itertools
 from os.path import dirname, isdir, isfile, splitext
 
-from Xclusion_criteria._xclusion_alt import (
+from Xclusion_criteria.xclusion_alt import (
     make_flowchart,
     get_selectors,
     make_scatter,

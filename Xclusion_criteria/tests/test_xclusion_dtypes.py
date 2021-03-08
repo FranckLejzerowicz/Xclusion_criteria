@@ -10,7 +10,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from Xclusion_criteria._xclusion_dtypes import (
+from Xclusion_criteria.xclusion_dtypes import (
     get_dtypes,
     get_dtypes_init,
     get_dtypes_final,

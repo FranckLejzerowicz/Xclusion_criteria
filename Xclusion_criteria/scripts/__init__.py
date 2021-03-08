@@ -6,6 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from Xclusion_criteria._xclusion import xclusion_criteria
+from Xclusion_criteria.xclusion import xclusion_criteria
 
 __all__ = ["xclusion_criteria"]

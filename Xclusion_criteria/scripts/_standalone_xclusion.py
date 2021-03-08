@@ -8,7 +8,7 @@
 
 import click
 
-from Xclusion_criteria._xclusion import xclusion_criteria
+from Xclusion_criteria.xclusion import xclusion_criteria
 from Xclusion_criteria import __version__
 
 

@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import pandas as pd
-from Xclusion_criteria._xclusion_io import read_i_criteria
+from Xclusion_criteria.xclusion_io import read_i_criteria
 
 
 def check_factors(var: str, index: str, values: list, nulls: list,

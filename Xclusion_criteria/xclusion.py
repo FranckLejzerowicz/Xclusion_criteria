@@ -9,10 +9,10 @@
 import sys
 import pkg_resources
 
-from Xclusion_criteria._xclusion_io import read_meta_pd, parse_plot_groups, fetch_data
-from Xclusion_criteria._xclusion_dtypes import get_dtypes, split_variables_types, check_num_cat_lists
-from Xclusion_criteria._xclusion_crits import get_criteria, apply_criteria
-from Xclusion_criteria._xclusion_plot import make_visualizations
+from Xclusion_criteria.xclusion_io import read_meta_pd, parse_plot_groups, fetch_data
+from Xclusion_criteria.xclusion_dtypes import get_dtypes, split_variables_types, check_num_cat_lists
+from Xclusion_criteria.xclusion_crits import get_criteria, apply_criteria
+from Xclusion_criteria.xclusion_plot import make_visualizations
 
 RESOURCES = pkg_resources.resource_filename('Xclusion_criteria', 'resources')
 
