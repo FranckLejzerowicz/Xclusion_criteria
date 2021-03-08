@@ -20,6 +20,10 @@ git clone https://github.com/FranckLejzerowicz/Xclusion_criteria.git
 cd Xclusion_criteria
 pip install -e .
 ```
+and then if there are updates
+```
+pip install --upgrade git+https://github.com/FranckLejzerowicz/Xclusion_criteria.git
+```
 
 *_Note that python and pip should be python3_
 
