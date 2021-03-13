@@ -90,7 +90,7 @@ def get_dtypes_init(md: pd.DataFrame) -> dict:
             dtypes_init[variable] = ['float']
         else:
             # Check variable's factors for stronger inference
-            print(md[variable])
+            # print(md[variable])
             dtypes_init[variable] = check_dtype_object(md[variable])
     return dtypes_init
 

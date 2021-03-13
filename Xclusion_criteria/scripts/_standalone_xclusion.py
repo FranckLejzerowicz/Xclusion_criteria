@@ -19,11 +19,11 @@ from Xclusion_criteria import __version__
 )
 @click.option(
     "-c", "--i-criteria", required=True,
-    help="Must be a yaml file (see README or 'examples/criteria.yml')."
+    help="Must be a yaml file (see README or 'examples/criteria_nonempty_output.yml')."
 )
 @click.option(
     "-p", "--i-plot-groups", required=False, default=None, show_default=True,
-    help="Must be a yaml file (see README or 'examples/criteria.yml')."
+    help="Must be a yaml file (see README or 'examples/plot.yml')."
 )
 @click.option(
     "-in", "--o-included", required=True,
@@ -34,12 +34,12 @@ from Xclusion_criteria import __version__
     help="Output metadata for the excluded samples only."
 )
 @click.option(
-    "-v", "--o-visualization", required=True,
+    "-v", "--o-visualization", required=False,
     help="Output metadata explorer for the included samples only."
 )
 @click.option(
-    "--random/--no-random", default=True, show_default=True,
-    help="Reduce visualization to 100 random samples."
+    "-r", "--p-random", default=100, show_default=True,
+    help="Reduce visualization to the passed number of (random) samples."
 )
 @click.option(
     "--fetch/--no-fetch", default=False, show_default=True,
@@ -56,7 +56,7 @@ from Xclusion_criteria import __version__
          "(Default = add _fetched_#s.biom)."
 )
 @click.option(
-    "-r", "--p-redbiom-context", required=False,
+    "-x", "--p-redbiom-context", required=False,
     default="Deblur-Illumina-16S-V4-150nt-780653", show_default=True,
     help="[if --fetch] Redbiom context for fetching 16S data from Qiita."
 )
@@ -66,7 +66,7 @@ from Xclusion_criteria import __version__
          "(defaults to 'newblooms.all.fasta' file from Xrbfetch package's folder 'resources')."
 )
 @click.option(
-    "-f", "--p-reads-filter", default=1500, show_default=True, type=int,
+    "-f", "--p-reads-filter", default=1000, show_default=True, type=int,
     help="[if --fetch] Minimum number of reads per sample."
 )
 @click.option(
@@ -92,14 +92,16 @@ def standalone_xclusion(
         o_included,
         o_excluded,
         o_visualization,
-        random,
+        p_random,
         fetch,
         o_metadata_file,
         o_biom_file,
         p_redbiom_context,
         p_bloom_sequences,
         p_reads_filter,
-        unique, update, dim
+        unique,
+        update,
+        dim
 ):
 
     xclusion_criteria(
@@ -109,14 +111,16 @@ def standalone_xclusion(
         o_included,
         o_excluded,
         o_visualization,
-        random,
+        p_random,
         fetch,
         o_metadata_file,
         o_biom_file,
         p_redbiom_context,
         p_bloom_sequences,
         p_reads_filter,
-        unique, update, dim
+        unique,
+        update,
+        dim
     )
 
 

@@ -30,7 +30,7 @@ RESOURCES = pkg_resources.resource_filename('Xclusion_criteria', 'resources')
 def make_visualizations(included: pd.DataFrame, plot_groups: dict,
                         o_visualization: str, numerical: list,
                         categorical: list, flowcharts: dict,
-                        random_samples: bool, fetch: bool) -> None:
+                        p_random: int, fetch: bool) -> None:
     """Build the three-panel criteria-based filtering figure.
 
     Parameters
@@ -47,7 +47,7 @@ def make_visualizations(included: pd.DataFrame, plot_groups: dict,
         Metadata variables that are categorical.
     flowcharts : dict
         Steps of the workflow with samples counts (simple representation).
-    random_samples : bool
+    p_random : int
         Whether to reduce visualization to 100 random samples or not.
     fetch : bool
         Whether to fetch the samples on redbiom or not.
@@ -72,7 +72,7 @@ def make_visualizations(included: pd.DataFrame, plot_groups: dict,
 
     print('Start making the chart (html) figure')
     make_user_chart(included_num, included_cat, flowcharts,
-                    o_visualization, random_samples)
+                    o_visualization, p_random)
 
     # o_explorer = '%s_metadataExplorer.html' % splitext(o_visualization)[0]
     # make_explorer_chart(included.reset_index(), o_explorer, numerical, categorical)
@@ -222,7 +222,7 @@ def make_user_chart(included_num: pd.DataFrame,
                     included_cat: pd.DataFrame,
                     flowcharts: dict,
                     o_visualization: str,
-                    random_samples: bool) -> None:
+                    p_random: int) -> None:
     """Build the figure.
 
     Parameters
@@ -237,8 +237,8 @@ def make_user_chart(included_num: pd.DataFrame,
         Steps of the workflow with samples counts (simple representation).
     o_visualization : str
         Path to output visualization for the included samples only.
-    random_samples : bool
-        Whether to reduce visualization to 100 random samples or not.
+    p_random : int
+        Whether to reduce visualization to a number random samples or not.
 
     """
 
@@ -255,12 +255,11 @@ def make_user_chart(included_num: pd.DataFrame,
         # because the table can be huge, a random sample.
         all_samples = included_cat_us.sample_name.unique()
 
-        N = 10000
         R = 2
-        if random_samples and all_samples.size > N:
-            print('More than 100 samples -> 3 times 100 samples will be used:')
-            cur_samples = [random.sample(all_samples.tolist(), N) for r in range(R)]
-            suffixes = ['_rand%s_%s' % (N, r) for r in range(R)]
+        if p_random and all_samples.size > p_random:
+            print('More than %s samples -> %s times %s samples will be used:' % (p_random, R, p_random))
+            cur_samples = [random.sample(all_samples.tolist(), p_random) for r in range(R)]
+            suffixes = ['_rand%s_%s' % (p_random, r) for r in range(R)]
         else:
             cur_samples = [all_samples.tolist()]
             suffixes = ['']

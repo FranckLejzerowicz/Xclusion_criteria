@@ -146,45 +146,40 @@ def fetch_data(
     print('Done.')
 
     flowcharts['data'] = []
-    print(redbiom_fetching)
     for step in redbiom_fetching:
         step_line = step.strip()
         if step_line.startswith('- Load biom table...'):
-            print('1', step_line)
+            print('[fetch]', step_line)
             n = step_line.split()[6]
             flowcharts['data'].append(['Fetch', n, 'redbiom', p_redbiom_context, None])
-        elif step_line.startswith('- filter blooms...'):
-            print('2', step_line)
+        elif step_line.startswith('- Filter blooms...'):
+            print('[fetch]', step_line)
             n = step_line.split()[5]
             flowcharts['data'].append(['Filter blooms', n, None, None, None])
-        elif step_line.startswith('- Filter biom for best sample...'):
-            print('3', step_line)
+        elif step_line.startswith('- Get best samples from ambiguous'):
+            print('[fetch]', step_line)
             n = step_line.split()[8]
             flowcharts['data'].append(['Solve redbiom ambiguous', n, 'most reads', '...or... ', 'most features'])
-        elif step_line.startswith('- Merge reads and features counts to metadata...'):
-            print('4', step_line)
-            n = step_line.split()[10]
-            flowcharts['data'].append(['Metadata merge', n, None, None, None])
         elif step_line.startswith('- Filter biom for min'):
-            print('5', step_line)
+            print('[fetch]', step_line)
             f = step_line.split()[5]
             n = step_line.split()[11]
             flowcharts['data'].append(['Filter reads', n, 'min %s' % f, None])
-        elif step_line.startswith('* Keep the best host_subject_id per sample...'):
-            print('6', step_line)
-            n = step_line.split()[9]
-            flowcharts['data'].append(['One per host', n, None, None, None])
-        elif step_line.startswith('* Keep the best working_sample_name per sample...'):
-            print('7', step_line)
+        elif step_line.startswith('- Already one sample per host_subject_id'):
+            print('[fetch]', step_line)
+            n = step_line.split()[8]
+            flowcharts['data'].append(['One per sample ID', n, None, None, None])
+        elif step_line.startswith('- Keep the best sample per host_subject_id'):
+            print('[fetch]', step_line)
             n = step_line.split()[9]
             flowcharts['data'].append(['One per sample ID', n, None, None, None])
 
-    if redbiom_fetching[-3].startswith(' - Write files:'):
-        included = read_meta_pd(redbiom_fetching[-2].split()[-1])
-        return included
-    else:
-        print('nothing fetched: check command:\n%s\nExiting...' % cmd)
-        sys.exit(1)
+    if 'Outputs:' in redbiom_fetching:
+        outs = redbiom_fetching[(redbiom_fetching.index('Outputs:') + 1):]
+        if len(outs):
+            return read_meta_pd(outs[0])
+    print('nothing fetched: check command:\n%s\nExiting...' % cmd)
+    sys.exit(1)
 
 
 def parse_plot_groups(i_plot_groups: str) -> dict:

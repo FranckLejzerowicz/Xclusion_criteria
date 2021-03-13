@@ -24,7 +24,7 @@ def xclusion_criteria(
         o_included: str,
         o_excluded: str,
         o_visualization: str,
-        random_samples: bool,
+        p_random: int,
         fetch: bool,
         o_metadata_file: str,
         o_biom_file: str,
@@ -51,7 +51,7 @@ def xclusion_criteria(
         Path to output metadata for the excluded samples only.
     o_visualization : str
         Path to output visualization for the included samples only.
-    random_samples : bool
+    p_random : int
         Whether to reduce visualization to 100 random samples or not.
     fetch : bool
         Whether to fetch the samples on redbiom or not.
@@ -136,20 +136,19 @@ def xclusion_criteria(
         print('Done.')
 
     if fetch and included.shape[0]:
-            included = fetch_data(o_included, flowcharts, o_metadata_file,
-                              o_biom_file, p_redbiom_context, p_bloom_sequences,
-                              p_reads_filter, unique, update, dim)
+        included = fetch_data(
+            o_included, flowcharts, o_metadata_file, o_biom_file, p_redbiom_context,
+            p_bloom_sequences, p_reads_filter, unique, update, dim)
 
     # Check there's min 3 categorical and 2 numerical variables
     print('- check there are min 3 categorical and 2 numerical variables...')
     plot_groups = parse_plot_groups(i_plot_groups)
 
-
     if included.shape[0]:
         print()
         for num in sorted(numerical):
             print('  [numerical]',
-                  num,  '(n=%s/%s)' % (sum(included[num].isnull()==False), included.shape[0]))
+                  num,  '(n=%s/%s)' % (sum(included[num].isnull() == False), included.shape[0]))
         print()
         for cat in sorted(categorical):
             if cat in included.columns:
@@ -158,8 +157,9 @@ def xclusion_criteria(
                 if len(cats_dict) > 10:
                     print('not showing)')
                 else:
-                    print('%s)' % ','.join(['%s:%s' % (k,v) if len(str(k))<10 else
-                                            '%s:%s' % (k[:10],v) for k,v in cats_dict.items()]))
+                    print('%s)' % ','.join([
+                        '%s:%s' % (k,v) if len(str(k))<10 else
+                        '%s:%s' % (k[:10],v) for k,v in cats_dict.items()]))
 
     no_fig = check_num_cat_lists(plot_groups, numerical, categorical)
     # show categorical/numerical variables concern
@@ -172,4 +172,4 @@ def xclusion_criteria(
         print('- build the three-panel criteria-based filtering figure...')
         make_visualizations(
             included, plot_groups, o_visualization,
-            numerical, categorical, flowcharts, random_samples, fetch)
+            numerical, categorical, flowcharts, p_random, fetch)
