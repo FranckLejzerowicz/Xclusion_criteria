@@ -231,7 +231,8 @@ def make_barplot(included_merged: pd.DataFrame,
     sorted_factors = get_sorted_factors(included_merged)
     width = int(15 * len(list(sorted_factors)))
     bars = altair.Chart(included_merged).mark_bar().encode(
-        x=altair.X('categorical_value:N', sort=sorted_factors),
+        x=altair.X('categorical_value:N', sort=sorted_factors,
+                   axis=altair.Axis(labelLimit=500)),
         y='count(categorical_value):Q',
         color='categorical_variable:N'
     ).properties(
