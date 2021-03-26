@@ -7,14 +7,11 @@
 # ----------------------------------------------------------------------------
 
 import os
-import yaml
-import json
 import random
-import numpy as np
 import pandas as pd
 import pkg_resources
 import itertools
-from os.path import dirname, isdir, isfile, splitext
+from os.path import dirname, isdir, splitext
 
 from Xclusion_criteria.xclusion_alt import (
     make_flowchart,
@@ -58,9 +55,11 @@ def make_visualizations(included: pd.DataFrame, plot_groups: dict,
     included.columns = [x.lower() for x in included.columns]
 
     # Subset the metadata to the plotting numeric variables
-    included_num = get_included_num('numerical', numerical, included, plot_groups)
+    included_num = get_included_num(
+        'numerical', numerical, included, plot_groups)
     # Subset the metadata to the plotting categorical variables
-    included_cat = get_included_num('categorical', categorical, included, plot_groups)
+    included_cat = get_included_num(
+        'categorical', categorical, included, plot_groups)
 
     # get output visualization file name
     if '/' in o_visualization:
@@ -73,9 +72,6 @@ def make_visualizations(included: pd.DataFrame, plot_groups: dict,
     print('Start making the chart (html) figure')
     make_user_chart(included_num, included_cat, flowcharts,
                     o_visualization, p_random)
-
-    # o_explorer = '%s_metadataExplorer.html' % splitext(o_visualization)[0]
-    # make_explorer_chart(included.reset_index(), o_explorer, numerical, categorical)
 
 
 def get_included_num(nc: str, num_cat: list, included: pd.DataFrame,
@@ -133,7 +129,8 @@ def get_included_num(nc: str, num_cat: list, included: pd.DataFrame,
     return included_nc
 
 
-def get_included_us(num_cat: str, included_num_cat: pd.DataFrame) -> pd.DataFrame:
+def get_included_us(
+        num_cat: str, included_num_cat: pd.DataFrame) -> pd.DataFrame:
     """Melt the table to get pairwise combinations
     of numeric (or categorial) variables' values.
 
@@ -153,8 +150,9 @@ def get_included_us(num_cat: str, included_num_cat: pd.DataFrame) -> pd.DataFram
     Returns
     -------
     included_num_us : pd.DataFrame
-        Metadata for the included samples only and for numerical (or categorical) variables
-        only but now unstacked to have the numeric values as one column, merged with itself.
+        Metadata for the included samples only and for numerical
+        (or categorical) variables only but now unstacked to have
+        the numeric values as one column, merged with itself.
             e.g. output for the above input (for numerical):
                 sample_name num_var_x   num_var_y   num_val_x   num_val_y
                 sample.ID.1 variable1   variable2   100000001   200000001
@@ -165,13 +163,16 @@ def get_included_us(num_cat: str, included_num_cat: pd.DataFrame) -> pd.DataFram
                 sample.ID.2 variable2   variable3   200000002   300000002
                 sample.ID.2 variable3   variable1   300000002   100000002
                 sample.ID.2 variable3   variable2   300000002   200000002
-        Note that the nan value is removed and that the 2-columns format is symmetric.
+        Note that the nan value is removed
+        and that the 2-columns format is symmetric.
     """
 
-    variables_pairs = list(itertools.combinations(included_num_cat.columns.tolist(), 2))
+    variables_pairs = list(itertools.combinations(
+        included_num_cat.columns.tolist(), 2))
     included_num_cat_us = included_num_cat.unstack().reset_index().rename(
         columns={'level_0': '%s_variable' % num_cat, 0: '%s_value' % num_cat})
-    included_num_cat_us = included_num_cat_us.loc[~included_num_cat_us.isna().any(axis=1), :]
+    included_num_cat_us = included_num_cat_us.loc[
+        ~included_num_cat_us.isna().any(axis=1), :]
 
     if num_cat == 'numerical':
         included_num_cat_us = pd.merge(
@@ -209,8 +210,9 @@ def add_unique_categorical(included_merged: pd.DataFrame) -> pd.DataFrame:
     ].drop_duplicates().groupby('categorical_value'):
         if var_tab.shape[0] > 1:
             ids.update(set(included_merged.loc[
-                (included_merged.categorical_variable.isin(var_tab.categorical_variable.tolist())) &
-                (included_merged.categorical_value == val),:].index.tolist()))
+                (included_merged.categorical_variable.isin(
+                    var_tab.categorical_variable.tolist())) &
+                (included_merged.categorical_value == val), :].index.tolist()))
     if ids:
         rep = included_merged.loc[ids, 'categorical_value'] + \
               ' (' + included_merged.loc[ids, 'categorical_variable'] + ')'
@@ -245,7 +247,8 @@ def make_user_chart(included_num: pd.DataFrame,
     flowchart = make_flowchart(flowcharts)
 
     if included_num.shape[0]:
-        # melt the table to get pairwise combinations of numeric variables' values
+        # melt the table to get pairwise combinations
+        # of numeric variables' values
         print(' - get numeric melted table... ')
         included_num_us = get_included_us('numerical', included_num)
         print(' - get categorical melted table... ')
@@ -257,8 +260,10 @@ def make_user_chart(included_num: pd.DataFrame,
 
         R = 2
         if p_random and all_samples.size > p_random:
-            print('More than %s samples -> %s times %s samples will be used:' % (p_random, R, p_random))
-            cur_samples = [random.sample(all_samples.tolist(), p_random) for r in range(R)]
+            print('More than %s samples -> %s times %s samples will be used:'
+                  % (p_random, R, p_random))
+            cur_samples = [
+                random.sample(all_samples.tolist(), p_random) for r in range(R)]
             suffixes = ['_rand%s_%s' % (p_random, r) for r in range(R)]
         else:
             cur_samples = [all_samples.tolist()]
@@ -267,7 +272,8 @@ def make_user_chart(included_num: pd.DataFrame,
         # For each set of randomly-picked 100 samples
         for sdx, suffix in enumerate(suffixes):
 
-            # subset categorical and numerical melted tables to the random samples
+            # subset categorical and numerical melted
+            # tables to the random samples
             cur_included_num_us = included_num_us.loc[
                 included_num_us.sample_name.isin(cur_samples[sdx])]
             cur_included_cat_us = included_cat_us.loc[
@@ -277,15 +283,19 @@ def make_user_chart(included_num: pd.DataFrame,
             included_merged = cur_included_num_us.merge(
                 cur_included_cat_us, on='sample_name', how='right')
             # remove the samples that have NaN in any of the row
-            included_merged = included_merged.loc[~included_merged.isna().any(axis=1), :]
+            included_merged = included_merged.loc[
+                ~included_merged.isna().any(axis=1), :]
 
             # make redundant factor unique
             included_merged = add_unique_categorical(included_merged)
 
             dropdown_x, dropdown_y, brush = get_selectors(included_merged)
-            scatter = make_scatter(included_merged, dropdown_x, dropdown_y, brush)
-            table_text = make_table_text(included_merged, dropdown_x, dropdown_y, brush)
-            barplot = make_barplot(included_merged, dropdown_x, dropdown_y, brush)
+            scatter = make_scatter(
+                included_merged, dropdown_x, dropdown_y,  brush)
+            table_text = make_table_text(
+                included_merged, dropdown_x, dropdown_y, brush)
+            barplot = make_barplot(
+                included_merged, dropdown_x, dropdown_y, brush)
 
             print(' - Write figure... ', end='')
             # concatenate the three panels
@@ -315,130 +325,3 @@ def make_user_chart(included_num: pd.DataFrame,
         )
         chart.save(o_visualization_fp)
         print('Done: %s' % o_visualization_fp)
-
-
-# def read_template_chart() -> dict:
-#     """Read the template figure from resources."""
-#     html_json_fp = '%s/template.chart.json' % RESOURCES
-#     with open(html_json_fp) as f:
-#         html_json = json.load(f)
-#     return html_json
-#
-#
-# def read_html_template() -> list:
-#     """Read the template java code for resources."""
-#     html_template_fp = '%s/template.text.html' % RESOURCES
-#     html_template = open(html_template_fp).readlines()
-#     return html_template
-#
-#
-# def make_explorer_chart(metadata: pd.DataFrame, o_explorer: str,
-#                         numerical: list, categorical: list) -> None:
-#     """
-#     Parameters
-#     ----------
-#     metadata : pd.DataFrame
-#         Metadata table.
-#     o_explorer : str
-#         Path to output visualization for the included samples only.
-#     numerical : list
-#         Metadata variables that are numeric.
-#     categorical : list
-#         Metadata variables that are categorical.
-#     """
-#     html_json = read_template_chart()
-#     html_template = read_html_template()
-#
-#     n_rows = metadata.shape[0]
-#     cols = [col for col in metadata.columns if col.lower() != 'description']
-#     allCols = [col for col in cols if sum(metadata[col].isna()) < (n_rows*0.9)]
-#     cat_also_cont = [col for col in cols if metadata[col].unique().size < 20]
-#
-#     all_data_from_table_testSet = ['sample_name'] + numerical + categorical
-#     all_data_from_table = []
-#     for r, row in metadata.iterrows():
-#         cur_d = {}
-#         for col, value in row.to_dict().items():
-#             if col not in all_data_from_table_testSet:
-#                 continue
-#             if str(value) == 'nan':
-#                 cur_d[col] = None
-#             elif col in numerical:
-#                 cur_d[col] = float(value)
-#             else:
-#                 cur_d[col] = value
-#         all_data_from_table.append(cur_d)
-#
-#     toEdit = [idx for idx, x in enumerate(html_json['data']) if x['name'].startswith('data-')][0]
-#     html_json['data'][toEdit]['values'] = all_data_from_table
-#
-#     longest_cat = [0, '']
-#     longest_cont = [0, '']
-#     for allCol in allCols:
-#         if allCol not in all_data_from_table_testSet:
-#             continue
-#         if allCol in numerical:
-#             maxlen = max([len(x) for x in metadata[allCol].astype('str').tolist()])
-#             if maxlen >= longest_cont[0]:
-#                 longest_cont[0] = maxlen
-#                 longest_cont[1] = allCol
-#         elif allCol in categorical:
-#             if 'country' in allCol.lower() or metadata[allCol].unique().size <= 30:
-#                 maxlen = metadata[allCol].unique().size
-#                 if maxlen >= longest_cat[0]:
-#                     longest_cat[0] = maxlen
-#                     longest_cat[1] = allCol
-#
-#     roReplaceSignals = {}
-#     for idx, signal_dict in enumerate(html_json['signals']):
-#         if signal_dict['name'] == 'Continuous_y':
-#             cur_cols = [x for x in numerical if x in all_data_from_table_testSet]
-#         elif signal_dict['name'] == 'Continuous_x':
-#             cur_cols = [x for x in numerical if x in all_data_from_table_testSet]
-#         elif signal_dict['name'] == 'Categorical_x':
-#             cur_cols =  [
-#                 x for x in categorical if metadata[x].unique().size <= 30 or
-#                     x in cat_also_cont or 'country' in x.lower()
-#             ]
-#         elif signal_dict['name'] == 'Legend':
-#             cur_cols = [
-#                 x for x in categorical if metadata[x].unique().size <= 30 and
-#                     x in all_data_from_table_testSet or
-#                     x in cat_also_cont or 'country' in x.lower()
-#             ]
-#         else:
-#             continue
-#         roReplaceSignals[(idx, signal_dict['name'])] = cur_cols
-#
-#     for idx_name, var_list in roReplaceSignals.items():
-#         idx, name = idx_name
-#         cur_L = [x for x in var_list if x in all_data_from_table_testSet]
-#         if name == 'Continuous_y':
-#             html_json['signals'][idx]['value'] = longest_cont[1]
-#             html_json['signals'][idx]['bind']['options'] = cur_L
-#         elif name == 'Continuous_x':
-#             html_json['signals'][idx]['value'] = longest_cont[1]
-#             html_json['signals'][idx]['bind']['options'] = cur_L
-#         elif name == 'Categorical_x':
-#             html_json['signals'][idx]['value'] = [x for x in cur_L if metadata[x].unique().size == max(
-#                 [metadata[x].unique().size for x in cur_L])][0]
-#             html_json['signals'][idx]['bind']['options'] = cur_L
-#         elif name == 'Legend':
-#             html_json['signals'][idx]['value'] = longest_cat[1]
-#             html_json['signals'][idx]['bind']['options'] = cur_L
-#
-#     html_json['height'] = 300
-#     html_json['width'] = 600
-#     html_json['padding'] = 10
-#     html_json['legends'][0]['columns'] = 3
-#     html_json["config"] = {"axis": {"labelLimit": 3000}}
-#
-#     with open(o_explorer, 'w') as o:
-#         for line in html_template:
-#             if 'TO_REPLACE_HERE' in line:
-#                 o.write(line.replace(
-#                     'TO_REPLACE_HERE',
-#                     json.dumps(html_json, sort_keys=True, indent=4, separators=(',', ': ')))
-#                 )
-#             else:
-#                 o.write(line)
