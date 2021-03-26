@@ -111,11 +111,13 @@ def xclusion_criteria(
         dict((x, TF) for x in metadata.columns if
              x in categorical and str(metadata[x].dtype)=='object'),
         inplace=True)
+    print(metadata.shape)
 
     # Apply filtering criteria to subset the metadata
     # -> get filtering flowchart and metadata for criteria-included samples
     print('- apply filtering criteria to subset the metadata...', end=' ')
     flowcharts, included = apply_criteria(metadata, criteria, numerical, messages)
+    print(metadata.shape)
     if messages:
         print('Problems encountered during application of criteria:')
         for message in messages:

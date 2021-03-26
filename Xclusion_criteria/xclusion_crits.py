@@ -465,6 +465,7 @@ def apply_criteria(metadata: pd.DataFrame, criteria: dict,
     if 'init' in criteria:
         init_included = apply_step_criteria(
             metadata, criteria, numerical, messages, flowcharts, 'init')
+        print('init', metadata.shape)
     else:
         init_included = metadata.copy()
 
