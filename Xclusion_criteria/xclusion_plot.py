@@ -283,7 +283,7 @@ def make_user_chart(included_num: pd.DataFrame,
             # remove the samples that have NaN in any of the row
             print(included_merged.sample_name.nunique())
             print(included_merged.loc[included_merged.isna().any(axis=1), :])
-            included_merged = included_merged.loc[~included_merged.isna().any(axis=1), :]
+            # included_merged = included_merged.loc[~included_merged.isna().any(axis=1), :]
             print(included_merged.sample_name.nunique())
 
             # make redundant factor unique
