@@ -61,8 +61,10 @@ def make_visualizations(included: pd.DataFrame, plot_groups: dict,
 
     # Subset the metadata to the plotting numeric variables
     included_num = get_included_num('numerical', numerical, included, plot_groups)
+    print(included_num.shape)
     # Subset the metadata to the plotting categorical variables
     included_cat = get_included_num('categorical', categorical, included, plot_groups)
+    print(included_cat.shape)
 
     # get output visualization file name
     if '/' in o_visualization:
