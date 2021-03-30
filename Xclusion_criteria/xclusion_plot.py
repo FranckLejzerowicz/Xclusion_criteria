@@ -126,6 +126,8 @@ def get_included_num(nc: str, num_cat: list, included: pd.DataFrame,
             print('\t* %s' % '\n\t* '.join(cat_not_to_plot))
         # in any case subset to the plotting variables in the metadata
         included_nc = included_nc[sorted(cat_to_plot)]
+        if nc == 'categorical':
+            included_nc = included_nc.fillna('Unspecified')
     return included_nc
 
 
@@ -283,8 +285,8 @@ def make_user_chart(included_num: pd.DataFrame,
             included_merged = cur_included_num_us.merge(
                 cur_included_cat_us, on='sample_name', how='right')
             # remove the samples that have NaN in any of the row
-            # included_merged = included_merged.loc[
-            #     ~included_merged.isna().any(axis=1), :]
+            included_merged = included_merged.loc[
+                ~included_merged.isna().any(axis=1), :]
 
             # make redundant factor unique
             included_merged = add_unique_categorical(included_merged)
