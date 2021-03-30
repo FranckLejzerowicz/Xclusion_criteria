@@ -128,6 +128,8 @@ def get_included_num(nc: str, num_cat: list, included: pd.DataFrame,
         included_nc = included_nc[sorted(cat_to_plot)]
         if nc == 'categorical':
             included_nc = included_nc.fillna('Unspecified')
+        if nc == 'numerical':
+            included_nc = included_nc.fillna(0.0)
     return included_nc
 
 

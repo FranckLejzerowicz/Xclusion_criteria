@@ -38,7 +38,7 @@ from Xclusion_criteria import __version__
     help="Output metadata explorer for the included samples only."
 )
 @click.option(
-    "-r", "--p-random", default=100, show_default=True,
+    "-r", "--p-random", default=1000, show_default=True,
     help="Reduce visualization to the passed number of (random) samples."
 )
 @click.option(
