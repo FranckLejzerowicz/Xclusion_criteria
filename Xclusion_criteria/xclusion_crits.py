@@ -496,7 +496,7 @@ def apply_criteria(metadata: pd.DataFrame, criteria: dict,
 
     if 'no_nan' in criteria:
         nan_included = apply_step_criteria(
-            init_included, criteria, numerical, messages, flowcharts, 'filter')
+            init_included, criteria, numerical, messages, flowcharts, 'no_nan')
     else:
         nan_included = init_included.copy()
 
