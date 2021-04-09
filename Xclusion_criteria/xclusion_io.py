@@ -56,7 +56,8 @@ def read_meta_pd(metadata_file: str) -> pd.DataFrame:
             break
     header = line.strip()
     for sep in ['\t', ';', ',']:
-        if len(header.split(sep))>1 and len(header.split(sep)) == (header.count(sep)+1):
+        if len(header.split(sep))>1 and len(
+                header.split(sep)) == (header.count(sep)+1):
             first_col = line.split(sep)[0]
             break
     else:
@@ -68,14 +69,11 @@ def read_meta_pd(metadata_file: str) -> pd.DataFrame:
     meta_pd.set_index('sample_name', inplace=True)
     meta_pd.columns = [x.lower() for x in meta_pd.columns]
     # remove NaN only columns
-    print(meta_pd.shape)
     meta_pd = meta_pd.loc[:, ~meta_pd.isna().all()]
-    print(meta_pd.shape)
     # remove duplicate columns
     meta_no_duplicates = [
         meta_pd.columns.tolist().index(x) for x in meta_pd.columns.tolist()]
     meta_pd = meta_pd.iloc[:, meta_no_duplicates]
-    print(meta_pd.shape)
     return meta_pd
 
 
@@ -155,28 +153,35 @@ def fetch_data(
         if step_line.startswith('- Load biom table...'):
             print('[fetch]', step_line)
             n = step_line.split()[6]
-            flowcharts['data'].append(['Fetch', n, 'redbiom', p_redbiom_context, None])
+            flowcharts['data'].append(
+                ['Fetch', n, 'redbiom', p_redbiom_context, None])
         elif step_line.startswith('- Filter blooms...'):
             print('[fetch]', step_line)
             n = step_line.split()[5]
-            flowcharts['data'].append(['Filter blooms', n, None, None, None])
+            flowcharts['data'].append(
+                ['Filter blooms', n, None, None, None])
         elif step_line.startswith('- Get best samples from ambiguous'):
             print('[fetch]', step_line)
             n = step_line.split()[8]
-            flowcharts['data'].append(['Solve redbiom ambiguous', n, 'most reads', '...or... ', 'most features'])
+            flowcharts['data'].append(
+                ['Solve redbiom ambiguous', n, 'most reads',
+                 '...or... ', 'most features'])
         elif step_line.startswith('- Filter biom for min'):
             print('[fetch]', step_line)
             f = step_line.split()[5]
             n = step_line.split()[11]
-            flowcharts['data'].append(['Filter reads', n, 'min %s' % f, None])
+            flowcharts['data'].append(
+                ['Filter reads', n, 'min %s' % f, None])
         elif step_line.startswith('- Already one sample per host_subject_id'):
             print('[fetch]', step_line)
             n = step_line.split()[8]
-            flowcharts['data'].append(['One per sample ID', n, None, None, None])
+            flowcharts['data'].append(
+                ['One per sample ID', n, None, None, None])
         elif step_line.startswith('- Keep the best sample per host_subject_id'):
             print('[fetch]', step_line)
             n = step_line.split()[9]
-            flowcharts['data'].append(['One per sample ID', n, None, None, None])
+            flowcharts['data'].append(
+                ['One per sample ID', n, None, None, None])
 
     if 'Outputs:' in redbiom_fetching:
         outs = redbiom_fetching[(redbiom_fetching.index('Outputs:') + 1):]
@@ -209,7 +214,8 @@ def parse_plot_groups(i_plot_groups: str) -> dict:
     for num_cat in ['categorical', 'numerical']:
         if num_cat in plot_groups:
             if not isinstance(plot_groups[num_cat], list):
-                print('%s variables provided in "%s" must be in a list (see docs)' % (num_cat, i_plot_groups))
+                print('%s variables provided in "%s" must be in'
+                      ' a list (see docs)' % (num_cat, i_plot_groups))
                 sys.exit(1)
             plot_groups[num_cat] = [x.lower() for x in plot_groups[num_cat]]
 
