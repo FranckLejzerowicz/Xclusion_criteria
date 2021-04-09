@@ -360,26 +360,40 @@ def do_filtering(input_pd: pd.DataFrame, var: str, index: str,
     cur_name = ''
     boolean = False
     included = input_pd.copy()
-    # filter based on the criteria, and report the delta and the number of samples left
+    # filter based on the criteria, and report the
+    # delta and the number of samples left
     if index == '0':
         cur_name = 'No_%s' % var
-        included = included.loc[~included[var].fillna('nan').str.lower().isin([x.lower() for x in values])]
+        included = included.loc[
+            ~included[var].fillna('nan').str.lower().isin(
+                [x.lower() for x in values]
+            )
+        ]
     elif index == '1':
         cur_name = var
         included = included.loc[included[var].isin(values)]
     elif index == '2':
         if var not in numerical:
-            messages.append('Metadata variable %s is not numerical (skipping)' % var)
+            messages.append(
+                'Metadata variable %s is not numerical (skipping)' % var)
             return cur_name, True, included
         crit_min, crit_max = values
         if crit_min == 'None' and crit_max == 'None':
-            messages.append('[Warning] Both numerical bounds for %s are "None" (skipping)' % var)
+            messages.append(
+                '[Warning] Both numerical bounds for %s'
+                ' are "None" (skipping)' % var)
             return cur_name, True, included
         cur_name = 'Range_%s' % var
         if crit_min != 'None':
-            included = included.loc[(included[var].fillna((float(crit_min) - 0.0001)) > float(crit_min))]
+            included = included.loc[
+                (included[var].fillna(
+                    (float(crit_min) - 0.0001)) > float(crit_min))
+            ]
         if crit_max != 'None':
-            included = included.loc[(included[var].fillna((float(crit_max) + 0.0001)) < float(crit_max))]
+            included = included.loc[
+                (included[var].fillna(
+                    (float(crit_max) + 0.0001)) < float(crit_max))
+            ]
     return cur_name, boolean, included
 
 
@@ -418,7 +432,8 @@ def apply_step_criteria(metadata: pd.DataFrame, criteria: dict,
     first_step = True
     for (var, index), values in criteria[step].items():
 
-        cur_name, boolean, included = do_filtering(included, var, index, values, numerical, messages)
+        cur_name, boolean, included = do_filtering(
+            included, var, index, values, numerical, messages)
         if boolean:
             continue
 
@@ -426,11 +441,13 @@ def apply_step_criteria(metadata: pd.DataFrame, criteria: dict,
         if first_step:
             flowchart.extend([
                 ['%s metadata' % step, metadata.shape[0], None, None, None],
-                [cur_name, cur_count, str(var), '\n'.join(map(str, values)), str(index)]
+                [cur_name, cur_count, str(var),
+                 '\n'.join(map(str, values)), str(index)]
             ])
             first_step = False
         else:
-            flowchart.append([cur_name, cur_count, str(var), '\n'.join(map(str, values)), str(index)])
+            flowchart.append([cur_name, cur_count, str(var),
+                              '\n'.join(map(str, values)), str(index)])
     flowcharts[step] = flowchart
     return included
 
@@ -477,13 +494,19 @@ def apply_criteria(metadata: pd.DataFrame, criteria: dict,
     else:
         add_included = pd.DataFrame()
 
+    if 'no_nan' in criteria:
+        nan_included = apply_step_criteria(
+            init_included, criteria, numerical, messages, flowcharts, 'filter')
+    else:
+        nan_included = init_included.copy()
+
     # Perform another filtering on the initially included samples
     # -> filter_included = finally included samples
     if 'filter' in criteria:
         filter_included = apply_step_criteria(
-            init_included, criteria, numerical, messages, flowcharts, 'filter')
+            nan_included, criteria, numerical, messages, flowcharts, 'filter')
     else:
-        filter_included = init_included.copy()
+        filter_included = nan_included.copy()
 
     # if there were samples to be re-added later
     if add_included.shape[0]:

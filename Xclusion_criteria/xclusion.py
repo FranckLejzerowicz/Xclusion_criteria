@@ -42,7 +42,8 @@ def xclusion_criteria(
     m_metadata_file : str
         Path to metadata file on which to apply included/exclusion criteria.
     i_criteria: str
-        Path to yml config file for the different inclusion/exclusion criteria to apply.
+        Path to yml config file for the
+        different inclusion/exclusion criteria to apply.
     i_plot_groups : str
         Path to yml config file for the different groups to visualize.
     o_included : str
@@ -94,9 +95,6 @@ def xclusion_criteria(
             print(message)
         messages = []
 
-    print(criteria['no_nan'])
-    print(criteriafdsa)
-
     # infer dtypes
     print('- infer dtypes...', end=' ')
     dtypes = get_dtypes(metadata, nulls)
@@ -118,7 +116,8 @@ def xclusion_criteria(
     # Apply filtering criteria to subset the metadata
     # -> get filtering flowchart and metadata for criteria-included samples
     print('- apply filtering criteria to subset the metadata...', end=' ')
-    flowcharts, included = apply_criteria(metadata, criteria, numerical, messages)
+    flowcharts, included = apply_criteria(
+        metadata, criteria, numerical, messages)
     if messages:
         print('Problems encountered during application of criteria:')
         for message in messages:
@@ -134,14 +133,17 @@ def xclusion_criteria(
     # write the metadata for criteria-excluded samples if requested
     if o_excluded and included.shape[0]:
         print('- write the metadata for criteria-excluded samples...', end=' ')
-        excluded = metadata.loc[[x for x in metadata.index if x not in included.index],:].copy()
+        excluded = metadata.loc[
+            [x for x in metadata.index if x not in included.index],:
+        ].copy()
         excluded.reset_index().to_csv(o_excluded, index=False, sep='\t')
         print('Done.')
 
     if fetch and included.shape[0]:
         included = fetch_data(
-            o_included, flowcharts, o_metadata_file, o_biom_file, p_redbiom_context,
-            p_bloom_sequences, p_reads_filter, unique, update, dim)
+            o_included, flowcharts, o_metadata_file, o_biom_file,
+            p_redbiom_context, p_bloom_sequences, p_reads_filter, unique,
+            update, dim)
 
     # Check there's min 3 categorical and 2 numerical variables
     print('- check there are min 3 categorical and 2 numerical variables...')
@@ -150,13 +152,14 @@ def xclusion_criteria(
     if included.shape[0]:
         print()
         for num in sorted(numerical):
-            print('  [numerical]',
-                  num,  '(n=%s/%s)' % (sum(included[num].isnull() == False), included.shape[0]))
+            print('  [numerical]', num, '(n=%s/%s)' % (
+                sum(included[num].isnull() == False), included.shape[0]))
         print()
         for cat in sorted(categorical):
             if cat in included.columns:
                 cats_dict = included[cat].value_counts().to_dict()
-                print('  [categorical]', cat, '(n=%s:' % len(cats_dict), end=' ')
+                print('  [categorical]', cat, '(n=%s:' % len(cats_dict),
+                      end=' ')
                 if len(cats_dict) > 10:
                     print('not showing)')
                 else:
