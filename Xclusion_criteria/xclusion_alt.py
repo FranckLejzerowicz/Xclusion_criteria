@@ -28,11 +28,14 @@ def make_flowchart(flowcharts: dict):
     flowcharts_pds = []
     for step in ['init', 'add', 'filter', 'data']:
         if step in flowcharts:
-            flowchart_pd = pd.DataFrame(flowcharts[step],
-                                        columns=['criterion', 'samples', 'variable',
-                                                 'values', 'indicator'])
-            flowchart_pd['criterion'] = ['%s (%s)' % (x, step) for x in flowchart_pd['criterion']]
-            flowchart_pd['filter'] = '%s (%s steps)' % (step, len(flowchart_pd.criterion.unique()))
+            flowchart_pd = pd.DataFrame(
+                flowcharts[step],
+                columns=['criterion', 'samples', 'variable',
+                         'values', 'indicator'])
+            flowchart_pd['criterion'] = [
+                '%s (%s)' % (x, step) for x in flowchart_pd['criterion']]
+            flowchart_pd['filter'] = '%s (%s steps)' % (
+                step, len(flowchart_pd.criterion.unique()))
             flowcharts_pds.append(flowchart_pd)
     flowcharts_pd = pd.concat(flowcharts_pds, axis=0, sort=False)
     criterion_order = []
@@ -46,15 +49,16 @@ def make_flowchart(flowcharts: dict):
     width = len(criterion_order) * 10
     # Selection progression figure (left panel)
     curve = altair.Chart(
-        flowcharts_pd, width=width, height=200, title='Samples selection progression'
+        flowcharts_pd, width=width,
+        height=200, title='Samples selection progression'
     ).mark_line(
         point=True
     ).encode(
-        x=altair.X('criterion', scale=altair.Scale(zero=False), sort=criterion_order),
+        x=altair.X('criterion', scale=altair.Scale(zero=False),
+                   sort=criterion_order),
         y=altair.Y('samples', scale=altair.Scale(zero=False)),
         color='filter',
-        tooltip=['filter', 'criterion', 'samples',
-                 'variable', 'values', 'indicator']
+        tooltip=['samples', 'variable', 'values', 'indicator']
     )
     print('Done')
     return curve

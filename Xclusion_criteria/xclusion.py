@@ -94,6 +94,9 @@ def xclusion_criteria(
             print(message)
         messages = []
 
+    print(criteria['no_nan'])
+    print(criteriafdsa)
+
     # infer dtypes
     print('- infer dtypes...', end=' ')
     dtypes = get_dtypes(metadata, nulls)
