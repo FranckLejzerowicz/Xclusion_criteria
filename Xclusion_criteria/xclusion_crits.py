@@ -236,25 +236,30 @@ def check_filtering_criteria(init_filter: dict, metadata: pd.DataFrame,
 
     """
     for variable_index, values in init_filter.items():
-        print(variable_index, values)
         # Checks that criterion has a metadata variable
         # and a numeric separated by a comma (",").
         if check_key(variable_index, messages):
+            print('a')
             continue
         variable, index = variable_index.split(',')
         # Checks that variable is in the metadata.
         if check_var_in_md(variable, list(metadata.columns), messages):
+            print('b')
             continue
         # Checks that variable's numeric indicator is "0", "1" or "2"
         if check_numeric_indicator(variable, index, messages):
+            print('c')
             continue
         # Checks that subsetting values are in a list
         if check_islist(variable, values, messages):
+            print('d')
             continue
         # Checks that min-max values are a two-items list
         if check_index(index, values, messages):
+            print('e')
             continue
         else:
+            print(variable_index, values)
             # Checks that subset values for the
             # current variable are in metadata
             boolean, common_values = check_factors(
