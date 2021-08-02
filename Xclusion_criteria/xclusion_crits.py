@@ -236,6 +236,7 @@ def check_filtering_criteria(init_filter: dict, metadata: pd.DataFrame,
 
     """
     for variable_index, values in init_filter.items():
+        print(variable_index, values)
         # Checks that criterion has a metadata variable
         # and a numeric separated by a comma (",").
         if check_key(variable_index, messages):
