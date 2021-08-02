@@ -153,6 +153,8 @@ def check_var_in_md(var: str, columns: list, messages: list) -> bool:
         Whether to keep the key/value or not.
 
     """
+    print(var)
+    print(columns)
     if var not in columns:
         messages.append('Variable %s not in metadata (skipped)' % var)
         return True
