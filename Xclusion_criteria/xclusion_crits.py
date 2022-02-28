@@ -421,8 +421,6 @@ def apply_step_criteria(metadata: pd.DataFrame, criteria: dict,
 
     flowchart = []
     included = metadata.copy()
-    print('A')
-    print(included)
     first_step = True
     for (var, index), values in criteria[step].items():
 
@@ -473,8 +471,6 @@ def apply_criteria(metadata: pd.DataFrame, criteria: dict,
     flowcharts = {}
     # Perform initial filtering on the raw metadata
     # -> init_included = initially included samples
-    print("metadata")
-    print(metadata)
     if 'init' in criteria:
         init_included = apply_step_criteria(
             metadata, criteria, numerical, messages, flowcharts, 'init')
@@ -503,9 +499,6 @@ def apply_criteria(metadata: pd.DataFrame, criteria: dict,
             nan_included, criteria, numerical, messages, flowcharts, 'filter')
     else:
         filter_included = nan_included.copy()
-
-    print(filter_included)
-    print(add_included)
 
     # if there were samples to be re-added later
     if add_included.shape[0]:

@@ -65,8 +65,8 @@ def read_meta_pd(metadata_file: str) -> pd.DataFrame:
         sys.exit(1)
     meta_pd = pd.read_csv(metadata_file, header=0, sep=sep,
                           dtype={first_col: str}, low_memory=False)
-    print("meta_pd")
-    print(meta_pd)
+    if 'sample_name' in set(meta_pd.columns):
+        meta_pd.rename(columns={'sample_name': 'sample_name_old'}, inplace=True)
     meta_pd.rename(columns={first_col: 'sample_name'}, inplace=True)
     meta_pd.set_index('sample_name', inplace=True)
     # remove NaN only columns
