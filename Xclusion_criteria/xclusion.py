@@ -127,6 +127,7 @@ def xclusion_criteria(
     if included.shape[0]:
         # write the metadata for criteria-included samples
         print('- write the metadata for criteria-included samples...', end=' ')
+        print(o_included)
         included.reset_index().to_csv(o_included, index=False, sep='\t')
         print('Done.')
 
