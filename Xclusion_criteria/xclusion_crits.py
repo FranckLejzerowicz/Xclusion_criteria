@@ -355,7 +355,6 @@ def do_filtering(input_pd: pd.DataFrame, var: str, index: str,
         Whether to keep the key/value or not.
     included : pd.DataFrame
         Metadata for the included samples only.
-
     """
     cur_name = ''
     boolean = False
@@ -364,9 +363,7 @@ def do_filtering(input_pd: pd.DataFrame, var: str, index: str,
     # delta and the number of samples left
     if index == '0':
         cur_name = 'No_%s' % var
-        included = included.loc[
-            ~included[var].fillna('nan').isin(values)
-        ]
+        included = included.loc[~included[var].fillna('nan').isin(values)]
     elif index == '1':
         cur_name = var
         included = included.loc[included[var].isin(values)]
@@ -383,13 +380,10 @@ def do_filtering(input_pd: pd.DataFrame, var: str, index: str,
             return cur_name, True, included
         cur_name = 'Range_%s' % var
         if crit_min != 'None':
-            included = included.loc[
-                (included[var].fillna(
-                    (float(crit_min) - 0.0001)) > float(crit_min))
-            ]
+            included = included.loc[(included[var].fillna(
+                (float(crit_min) - 0.0001)) > float(crit_min))]
         if crit_max != 'None':
-            included = included.loc[
-                (included[var].fillna(
+            included = included.loc[(included[var].fillna(
                     (float(crit_max) + 0.0001)) < float(crit_max))
             ]
     return cur_name, boolean, included
@@ -427,6 +421,8 @@ def apply_step_criteria(metadata: pd.DataFrame, criteria: dict,
 
     flowchart = []
     included = metadata.copy()
+    print('A')
+    print(included)
     first_step = True
     for (var, index), values in criteria[step].items():
 
@@ -477,6 +473,8 @@ def apply_criteria(metadata: pd.DataFrame, criteria: dict,
     flowcharts = {}
     # Perform initial filtering on the raw metadata
     # -> init_included = initially included samples
+    print("metadata")
+    print(metadata)
     if 'init' in criteria:
         init_included = apply_step_criteria(
             metadata, criteria, numerical, messages, flowcharts, 'init')
