@@ -506,6 +506,9 @@ def apply_criteria(metadata: pd.DataFrame, criteria: dict,
     else:
         filter_included = nan_included.copy()
 
+    print(filter_included)
+    print(add_included)
+
     # if there were samples to be re-added later
     if add_included.shape[0]:
         # only get the samples not already in finally included samples
