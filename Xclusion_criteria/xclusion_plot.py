@@ -50,9 +50,9 @@ def make_visualizations(included: pd.DataFrame, plot_groups: dict,
         Whether to fetch the samples on redbiom or not.
     """
 
-    numerical = [x.lower() for x in numerical if x in included.columns]
-    categorical = [x.lower() for x in categorical if x in included.columns]
-    included.columns = [x.lower() for x in included.columns]
+    numerical = [x for x in numerical if x in included.columns]
+    categorical = [x for x in categorical if x in included.columns]
+    included.columns = [x for x in included.columns]
 
     # Subset the metadata to the plotting numeric variables
     included_num = get_included_num(
@@ -106,8 +106,8 @@ def get_included_num(nc: str, num_cat: list, included: pd.DataFrame,
             included_nc['number_of_samples'] = 'number_of_samples'
             included_nc = included_nc[['number_of_samples']]
     else:
-        # get plotting variables lower cased
-        plot_groups_cats = set([x.lower() for x in plot_groups[nc]])
+        # get plotting variables
+        plot_groups_cats = set(plot_groups[nc])
         # get plotting variables in the metadata
         cat_to_plot = plot_groups_cats & set(num_cat)
         # get plotting variables NOT in the metadata

@@ -41,7 +41,7 @@ def get_dtypes_final(md: pd.DataFrame, nulls: list, dtypes_init: dict) -> dict:
     for variable, dtypes in dtypes_init.items():
         if dtypes[-1] == 'check':
             factors = md[variable].copy()
-            nan_tf = pd.Series(factors.astype(str).str.lower()).str.contains('|'.join(nulls))
+            nan_tf = pd.Series(factors.astype(str)).str.contains('|'.join(nulls))
             factors[nan_tf] = np.nan
             for val in factors.unique().tolist():
                 if str(val) != 'nan':

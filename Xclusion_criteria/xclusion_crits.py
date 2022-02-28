@@ -365,9 +365,7 @@ def do_filtering(input_pd: pd.DataFrame, var: str, index: str,
     if index == '0':
         cur_name = 'No_%s' % var
         included = included.loc[
-            ~included[var].fillna('nan').str.lower().isin(
-                [x.lower() for x in values]
-            )
+            ~included[var].fillna('nan').isin(values)
         ]
     elif index == '1':
         cur_name = var

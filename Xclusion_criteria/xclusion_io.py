@@ -67,7 +67,6 @@ def read_meta_pd(metadata_file: str) -> pd.DataFrame:
                           dtype={first_col: str}, low_memory=False)
     meta_pd.rename(columns={first_col: 'sample_name'}, inplace=True)
     meta_pd.set_index('sample_name', inplace=True)
-    meta_pd.columns = [x.lower() for x in meta_pd.columns]
     # remove NaN only columns
     meta_pd = meta_pd.loc[:, ~meta_pd.isna().all()]
     # remove duplicate columns
@@ -217,6 +216,5 @@ def parse_plot_groups(i_plot_groups: str) -> dict:
                 print('%s variables provided in "%s" must be in'
                       ' a list (see docs)' % (num_cat, i_plot_groups))
                 sys.exit(1)
-            plot_groups[num_cat] = [x.lower() for x in plot_groups[num_cat]]
 
     return plot_groups
