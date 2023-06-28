@@ -175,8 +175,10 @@ def get_included_us(
         included_num_cat.columns.tolist(), 2))
     included_num_cat_us = included_num_cat.unstack().reset_index().rename(
         columns={'level_0': '%s_variable' % num_cat, 0: '%s_value' % num_cat})
-    included_num_cat_us = included_num_cat_us.loc[
-        ~included_num_cat_us.isna().any(axis=1), :]
+    # included_num_cat_us = included_num_cat_us.loc[
+    #     ~included_num_cat_us.isna().any(axis=1), :]
+    # included_num_cat_us = included_num_cat_us.loc[
+    #     ~included_num_cat_us.isna().any(axis=1), :]
 
     if num_cat == 'numerical':
         included_num_cat_us = pd.merge(
@@ -292,6 +294,7 @@ def make_user_chart(included_num: pd.DataFrame,
 
             # make redundant factor unique
             included_merged = add_unique_categorical(included_merged)
+            included_merged.to_csv('/Users/franck/projects/test.tsv')
 
             dropdown_x, dropdown_y, brush = get_selectors(included_merged)
             scatter = make_scatter(
