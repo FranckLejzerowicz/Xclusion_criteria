@@ -79,31 +79,36 @@ def get_selectors(included_merged: pd.DataFrame):
 
     """
     # Dropdown menu first numerical data menu
-    # Dropdown menu second numerical data menu
-
-    numerical_variables_y = included_merged['numerical_variable_y'].unique().tolist()
+    num_vals_y = {v: l['sample_name'].nunique() for v, l in
+                  included_merged.groupby('numerical_variable_y')}
+    numerical_variables_y = sorted(num_vals_y.items(), key=lambda x: x[1])[::-1]
+    numerical_variables_y = [x[0] for x in numerical_variables_y]
     dropdown_variables_y = altair.binding_select(options=numerical_variables_y)
-    dropdown_y = altair.selection_single(
+    dropdown_y = altair.selection_point(
         fields=['numerical_variable_y'],
         bind=dropdown_variables_y,
-        init={'numerical_variable_y': numerical_variables_y[0]},
+        value=numerical_variables_y[0],
         name="numerical_variable_y",
         on="click[event.shiftKey&!event.shiftKey]",
         clear=False
     )
-    numerical_variables_x = included_merged['numerical_variable_x'].unique().tolist()
+    # Dropdown menu second numerical data menu
+    num_vals_x = {v: l['sample_name'].nunique() for v, l in
+                  included_merged.groupby('numerical_variable_x')}
+    numerical_variables_x = sorted(num_vals_x.items(), key=lambda x: x[1])[::-1]
+    numerical_variables_x = [x[0] for x in numerical_variables_x]
     dropdown_variables_x = altair.binding_select(options=numerical_variables_x)
-    dropdown_x = altair.selection_single(
+    dropdown_x = altair.selection_point(
         fields=['numerical_variable_x'],
         bind=dropdown_variables_x,
-        init={'numerical_variable_x': numerical_variables_x[0]},
+        value=[x for x in numerical_variables_x
+               if x != numerical_variables_y[0]][0],
         name="numerical_variable_x",
         on="click[event.shiftKey&!event.shiftKey]",
-        clear = False,
+        clear=False,
     )
     # Samples selector brush
-    brush = altair.selection(
-        type='interval',
+    brush = altair.selection_interval(
         resolve='global',
         clear=False
     )
@@ -150,11 +155,11 @@ def make_scatter(included_merged: pd.DataFrame,
         dropdown_y
     ).transform_filter(
         dropdown_x
-    ).add_selection(
+    ).add_params(
         dropdown_y
-    ).add_selection(
+    ).add_params(
         dropdown_x
-    ).add_selection(
+    ).add_params(
         brush
     ).resolve_scale(
         color='independent'
