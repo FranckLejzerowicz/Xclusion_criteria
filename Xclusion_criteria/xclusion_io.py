@@ -65,7 +65,8 @@ def read_meta_pd(metadata_file: str) -> pd.DataFrame:
         sys.exit(1)
     meta_pd = pd.read_csv(metadata_file, header=0, sep=sep,
                           dtype={first_col: str}, low_memory=False)
-    if 'sample_name' in set(meta_pd.columns):
+    cols = meta_pd.columns
+    if cols[0] != 'sample_name' and 'sample_name' in set(cols[1:]):
         meta_pd.rename(columns={'sample_name': 'sample_name_old'}, inplace=True)
     meta_pd.rename(columns={first_col: 'sample_name'}, inplace=True)
     meta_pd.set_index('sample_name', inplace=True)
