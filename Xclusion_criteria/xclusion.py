@@ -110,7 +110,7 @@ def xclusion_criteria(
           'True': 'Yes', 'true': 'Yes', True: 'No'}
     metadata.replace(
         dict((x, TF) for x in metadata.columns if
-             x in categorical and str(metadata[x].dtype)=='object'),
+             x in categorical and str(metadata[x].dtype) == 'object'),
         inplace=True)
 
     # Apply filtering criteria to subset the metadata
@@ -118,6 +118,7 @@ def xclusion_criteria(
     print('- apply filtering criteria to subset the metadata...', end=' ')
     flowcharts, included = apply_criteria(
         metadata, criteria, numerical, messages)
+
     if messages:
         print('Problems encountered during application of criteria:')
         for message in messages:
@@ -148,7 +149,6 @@ def xclusion_criteria(
     # Check there's min 3 categorical and 2 numerical variables
     print('- check there are min 3 categorical and 2 numerical variables...')
     plot_groups = parse_plot_groups(i_plot_groups)
-
     if included.shape[0]:
         print()
         for num in sorted(numerical):
