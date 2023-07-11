@@ -170,7 +170,6 @@ def get_included_us(
         Note that the nan value is removed
         and that the 2-columns format is symmetric.
     """
-
     variables_pairs = list(itertools.combinations(
         included_num_cat.columns.tolist(), 2))
     included_num_cat_us = included_num_cat.unstack().reset_index().rename(
@@ -182,11 +181,12 @@ def get_included_us(
 
     if num_cat == 'numerical':
         included_num_cat_us = pd.merge(
-            included_num_cat_us, included_num_cat_us, on='sample_name'
-        )
+            included_num_cat_us,
+            included_num_cat_us,
+            on='sample_name')
         included_num_cat_us = included_num_cat_us.set_index(
             ['numerical_variable_x', 'numerical_variable_y']
-        ).loc[variables_pairs,:].reset_index()
+        ).loc[variables_pairs, :].reset_index()
 
         included_merged_num_cols = [
             'sample_name',
@@ -251,7 +251,6 @@ def make_user_chart(included_num: pd.DataFrame,
     """
 
     flowchart = make_flowchart(flowcharts)
-
     if included_num.shape[0]:
         # melt the table to get pairwise combinations
         # of numeric variables' values
